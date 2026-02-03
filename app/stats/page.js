@@ -394,64 +394,12 @@ export default function StatsPage() {
           </div>
         )}
 
-        {/* 用户列表 */}
-        {stats?.allUsers && stats.allUsers.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <Users className="w-6 h-6" />
-              所有用户 ({stats.allUsers.length})
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">序号</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">钱包地址</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">推荐人</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">团队</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">加入时间</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stats.allUsers.map((user, index) => (
-                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-gray-600">{index + 1}</td>
-                      <td className="py-3 px-4">
-                        <span className="font-mono text-sm text-gray-800" title={user.wallet_address}>
-                          {formatAddress(user.wallet_address)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        {user.referrer_address ? (
-                          <span className="font-mono text-sm text-gray-600" title={user.referrer_address}>
-                            {formatAddress(user.referrer_address)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 text-sm">无</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                          {user.team_name}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
-                        {formatDate(user.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
         {/* 空状态 */}
-        {stats?.allUsers && stats.allUsers.length === 0 && (
+        {stats?.allUsers && stats.allUsers.length === 0 && stats?.teams && stats.teams.length === 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
             <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">暂无用户数据</h3>
-            <p className="text-gray-500">还没有用户加入系统</p>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">暂无统计数据</h3>
+            <p className="text-gray-500">系统刚刚启动，敬请期待！</p>
           </div>
         )}
       </div>
