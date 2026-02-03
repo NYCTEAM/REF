@@ -574,24 +574,6 @@ export default function Home() {
             </div>
           )}
         </div>
-
-        {/* 底部导航 */}
-        <div className="flex gap-4 justify-center flex-wrap">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all shadow-lg"
-          >
-            <Shield className="w-5 h-5" />
-            后台管理
-          </Link>
-          <Link
-            href="/stats"
-            className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-800 rounded-xl font-semibold hover:shadow-lg transition-all border-2 border-gray-200"
-          >
-            <Users className="w-5 h-5" />
-            查看统计数据
-          </Link>
-        </div>
       </div>
     </div>
   );

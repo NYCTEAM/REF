@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut } from 'lucide-react';
+import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 // 管理员邮箱列表（实际项目中应该存储在后端数据库）
@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [teamLeaders, setTeamLeaders] = useState([]);
+  const [stats, setStats] = useState(null); // 新增统计数据状态
   const [newLeaderAddress, setNewLeaderAddress] = useState('');
   const [newLeaderName, setNewLeaderName] = useState('');
   const [newTeamDesc, setNewTeamDesc] = useState(''); // 新增描述字段
@@ -34,8 +35,19 @@ export default function AdminPage() {
       setIsLoggedIn(true);
       setAdminEmail(savedEmail);
       fetchTeams();
+      fetchStats(); // 加载统计数据
     }
   }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch('/api/stats');
+      const data = await res.json();
+      setStats(data);
+    } catch (error) {
+      console.error('获取统计失败:', error);
+    }
+  };
 
   const fetchTeams = async () => {
     try {
@@ -146,6 +158,21 @@ export default function AdminPage() {
     setTimeout(() => setMessage(''), 3000);
   };
 
+  const formatAddress = (address) => {
+    if (!address) return '无';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const handleLogin = (e) => {
     e.preventDefault();
     
@@ -168,7 +195,8 @@ export default function AdminPage() {
       setIsLoggedIn(true);
       setAdminEmail(email);
       showMessage('登录成功', 'success');
-      loadTeamLeaders();
+      fetchTeams();
+      fetchStats();
     } else {
       showMessage('邮箱或密码错误', 'error');
     }
@@ -295,6 +323,41 @@ export default function AdminPage() {
             </button>
           </div>
         </div>
+
+        {/* 统计看板 */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-800">{stats.totalUsers || 0}</span>
+              </div>
+              <h3 className="text-gray-600 font-semibold">总用户数</h3>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-green-500">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                  <LinkIcon className="w-6 h-6 text-green-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-800">{stats.usersWithReferrer || 0}</span>
+              </div>
+              <h3 className="text-gray-600 font-semibold">推荐用户数</h3>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-purple-500">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-800">{stats.teamsCount || 0}</span>
+              </div>
+              <h3 className="text-gray-600 font-semibold">团队数量</h3>
+            </div>
+          </div>
+        )}
 
         {/* 消息提示 */}
         {message && (
@@ -440,6 +503,90 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+
+        {/* 所有用户数据列表 */}
+        {stats?.allUsers && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Users className="w-6 h-6" />
+                所有注册用户 ({stats.allUsers.length})
+              </h2>
+              <button
+                onClick={() => {
+                  /* 简易CSV导出逻辑 */
+                  const headers = ['钱包地址', '推荐人', '所属团队', '加入时间'];
+                  const rows = stats.allUsers.map(u => [
+                    u.wallet_address,
+                    u.referrer_address || '无',
+                    u.team_name,
+                    new Date(u.created_at).toLocaleString()
+                  ]);
+                  const csvContent = [headers, ...rows]
+                    .map(row => row.map(cell => `"${cell}"`).join(','))
+                    .join('\n');
+                  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `用户列表_${new Date().toISOString().slice(0,10)}.csv`;
+                  link.click();
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                导出数据
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">序号</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">钱包地址</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">推荐人</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">所属团队</th>
+                    <th className="text-left py-3 px-4 font-semibold text-gray-700">加入时间</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {stats.allUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-gray-500">
+                        暂无用户数据
+                      </td>
+                    </tr>
+                  ) : (
+                    stats.allUsers.map((user, index) => (
+                      <tr key={index} className="hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 text-gray-500">{index + 1}</td>
+                        <td className="py-3 px-4">
+                          <span className="font-mono text-sm text-gray-700">{user.wallet_address}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          {user.referrer_address ? (
+                            <span className="font-mono text-sm text-gray-600">{user.referrer_address}</span>
+                          ) : (
+                            <span className="text-gray-400 text-sm">无</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100">
+                            {user.team_name}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-600">
+                          {formatDate(user.created_at)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* 成员详情模态框 */}
         {isMembersModalOpen && (
