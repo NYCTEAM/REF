@@ -108,6 +108,24 @@ export default function Home() {
       return;
     }
 
+    // 确定团队名称
+    let finalTeamName = teamName;
+    if (!finalTeamName && referrerName) {
+      finalTeamName = referrerName;
+    }
+    if (!finalTeamName && referrerAddress) {
+      finalTeamName = `团队-${referrerAddress.substring(0, 6)}`;
+    }
+    if (!finalTeamName) {
+      finalTeamName = '默认团队';
+    }
+
+    console.log('绑定参数:', {
+      walletAddress,
+      referrerAddress,
+      teamName: finalTeamName
+    });
+
     try {
       setLoading(true);
       const response = await fetch('/api/bind', {
@@ -118,6 +136,7 @@ export default function Home() {
         body: JSON.stringify({
           walletAddress,
           referrerAddress: referrerAddress || null,
+          teamName: finalTeamName,
         }),
       });
 
