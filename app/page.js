@@ -64,16 +64,24 @@ export default function Home() {
   };
 
   const connectWallet = async () => {
+    console.log('开始连接钱包...');
+    console.log('window.ethereum:', window.ethereum);
+    
     if (typeof window.ethereum === 'undefined') {
+      alert('未检测到MetaMask！\n\n请确保：\n1. 已安装MetaMask浏览器插件\n2. MetaMask已启用\n3. 刷新页面后重试');
       showMessage('请安装MetaMask钱包', 'error');
       return;
     }
 
     try {
       setLoading(true);
+      console.log('请求连接MetaMask...');
+      
       const accounts = await window.ethereum.request({ 
         method: 'eth_requestAccounts' 
       });
+      
+      console.log('连接成功，账户:', accounts);
       
       const address = accounts[0];
       setWalletAddress(address);
@@ -81,7 +89,14 @@ export default function Home() {
       showMessage('钱包连接成功', 'success');
     } catch (error) {
       console.error('连接钱包失败:', error);
-      showMessage('连接钱包失败', 'error');
+      
+      if (error.code === 4001) {
+        showMessage('您拒绝了连接请求', 'error');
+      } else if (error.code === -32002) {
+        showMessage('MetaMask已有待处理的连接请求，请检查MetaMask弹窗', 'error');
+      } else {
+        showMessage(`连接钱包失败: ${error.message}`, 'error');
+      }
     } finally {
       setLoading(false);
     }
