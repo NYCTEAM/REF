@@ -21,6 +21,11 @@ export default function AdminPage() {
   const [newTeamDesc, setNewTeamDesc] = useState(''); // 新增描述字段
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  
+  // 成员详情模态框状态
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
+  const [currentTeamName, setCurrentTeamName] = useState('');
 
   useEffect(() => {
     // 检查登录状态
@@ -109,6 +114,23 @@ export default function AdminPage() {
     } catch (error) {
       console.error('删除失败:', error);
       showMessage('删除失败，请重试', 'error');
+    }
+  };
+
+  const viewTeamMembers = async (teamName) => {
+    try {
+      const res = await fetch(`/api/admin/teams/members?teamName=${encodeURIComponent(teamName)}`);
+      const data = await res.json();
+      if (data.success) {
+        setSelectedTeamMembers(data.members);
+        setCurrentTeamName(teamName);
+        setIsMembersModalOpen(true);
+      } else {
+        showMessage(data.error || '获取成员失败', 'error');
+      }
+    } catch (error) {
+      console.error('获取成员失败:', error);
+      showMessage('获取成员详情失败', 'error');
     }
   };
 
@@ -371,9 +393,17 @@ export default function AdminPage() {
                       <p className="text-sm text-gray-600 font-mono break-all mb-2">
                         {leader.leader_address}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mb-3">
                         创建时间: {new Date(leader.created_at).toLocaleString('zh-CN')}
                       </p>
+                      
+                      <button
+                        onClick={() => viewTeamMembers(leader.name)}
+                        className="inline-flex items-center gap-1 text-sm bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 transition-colors border border-purple-200"
+                      >
+                        <Users className="w-4 h-4" />
+                        查看成员详情
+                      </button>
                     </div>
                     <button
                       onClick={() => deleteTeamLeader(leader.id)}
@@ -410,6 +440,79 @@ export default function AdminPage() {
             </div>
           )}
         </div>
+
+        {/* 成员详情模态框 */}
+        {isMembersModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+              <div className="p-6 border-b flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-2xl">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">{currentTeamName} - 成员列表</h3>
+                  <p className="text-sm text-gray-600">共 {selectedTeamMembers.length} 人</p>
+                </div>
+                <button 
+                  onClick={() => setIsMembersModalOpen(false)}
+                  className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+                >
+                  <span className="text-2xl leading-none">&times;</span>
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-6">
+                {selectedTeamMembers.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>暂无成员加入</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-gray-50 text-gray-600 text-sm">
+                        <tr>
+                          <th className="px-4 py-3 rounded-tl-lg">序号</th>
+                          <th className="px-4 py-3">钱包地址</th>
+                          <th className="px-4 py-3">加入时间</th>
+                          <th className="px-4 py-3 rounded-tr-lg">操作</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y">
+                        {selectedTeamMembers.map((member, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-gray-500 font-mono">{index + 1}</td>
+                            <td className="px-4 py-3 font-mono text-gray-700">{member.wallet_address}</td>
+                            <td className="px-4 py-3 text-gray-500 text-sm">
+                              {new Date(member.created_at).toLocaleString('zh-CN')}
+                            </td>
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(member.wallet_address);
+                                  showMessage('地址已复制', 'success');
+                                }}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                              >
+                                复制地址
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-4 border-t bg-gray-50 rounded-b-2xl flex justify-end">
+                <button
+                  onClick={() => setIsMembersModalOpen(false)}
+                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                >
+                  关闭
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 底部导航 */}
         <div className="mt-8 flex gap-4 justify-center">
