@@ -31,6 +31,15 @@ export default function StatsPage() {
       
       const data = await response.json();
       console.log('获取到的统计数据:', data);
+      
+      // 调试日志
+      if (data) {
+        console.log('团队数据:', data.teams);
+        console.log('推荐人排名数据:', data.referrerRanking);
+        console.log('是否有团队数据:', data.teams && data.teams.length > 0);
+        console.log('是否有排名数据:', data.referrerRanking && data.referrerRanking.length > 0);
+      }
+      
       setStats(data);
     } catch (err) {
       console.error('获取统计数据失败:', err);
