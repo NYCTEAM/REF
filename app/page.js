@@ -15,6 +15,15 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
   const [teamMembers, setTeamMembers] = useState([]);
+  const [selectedTeam, setSelectedTeam] = useState('');
+
+  // 预设团队列表
+  const defaultTeams = [
+    { id: 'eagle', name: 'Eagle Team', description: '雄鹰战队 - 展翅高飞' },
+    { id: 'tiger', name: 'Tiger Team', description: '猛虎战队 - 勇往直前' },
+    { id: 'lion', name: 'Lion Team', description: '雄狮战队 - 王者归来' },
+    { id: 'wolf', name: 'Wolf Team', description: '战狼战队 - 团结必胜' }
+  ];
 
   // 从URL获取推荐人地址
   useEffect(() => {
@@ -182,13 +191,21 @@ export default function Home() {
 
     // 确定团队名称
     let finalTeamName = teamName;
-    if (!finalTeamName && referrerName) {
+    
+    // 如果有推荐人，优先使用推荐人的团队（逻辑上通常跟随推荐人）
+    // 或者如果没有推荐人，必须选择一个团队
+    if (!referrerAddress && !selectedTeam) {
+      showMessage('请先选择一个团队加入', 'error');
+      return;
+    }
+
+    if (selectedTeam) {
+      finalTeamName = selectedTeam;
+    } else if (referrerName) {
       finalTeamName = referrerName;
-    }
-    if (!finalTeamName && referrerAddress) {
+    } else if (referrerAddress) {
       finalTeamName = `团队-${referrerAddress.substring(0, 6)}`;
-    }
-    if (!finalTeamName) {
+    } else {
       finalTeamName = '默认团队';
     }
 
@@ -225,6 +242,7 @@ export default function Home() {
       } else if (data.alreadyBound) {
         console.log('钱包已绑定');
         setIsBound(true);
+        setTeamName(data.user?.team_name || finalTeamName); // 尝试使用返回的已有团队名
         showMessage('该钱包已经绑定过了', 'error');
       } else {
         console.error('绑定失败:', data.message);
@@ -305,6 +323,39 @@ export default function Home() {
                 <p className="text-sm text-gray-700">
                   连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{referrerName || `团队-${referrerAddress.substring(0, 8)}`}</span>
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* 团队选择 - 仅在未绑定且无推荐人时显示 */}
+          {!isBound && !referrerAddress && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Users className="w-6 h-6" />
+                选择团队
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {defaultTeams.map((team) => (
+                  <div 
+                    key={team.id}
+                    onClick={() => setSelectedTeam(team.name)}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                      selectedTeam === team.name 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className={`font-bold ${selectedTeam === team.name ? 'text-blue-700' : 'text-gray-800'}`}>
+                        {team.name}
+                      </h3>
+                      {selectedTeam === team.name && (
+                        <CheckCircle className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-600">{team.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
