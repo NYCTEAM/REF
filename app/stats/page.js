@@ -18,17 +18,23 @@ export default function StatsPage() {
     try {
       setLoading(true);
       setError('');
+      console.log('开始获取统计数据...');
       const response = await fetch('/api/stats');
       
+      console.log('Stats API响应状态:', response.status);
+      
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API错误响应:', errorText);
         throw new Error('获取统计数据失败');
       }
       
       const data = await response.json();
+      console.log('获取到的统计数据:', data);
       setStats(data);
     } catch (err) {
       console.error('获取统计数据失败:', err);
-      setError('无法加载统计数据，请确保后端服务器正在运行');
+      setError('无法加载统计数据，请刷新页面重试');
     } finally {
       setLoading(false);
     }

@@ -141,17 +141,21 @@ export default function Home() {
       });
 
       const data = await response.json();
+      console.log('绑定API响应:', data);
 
       if (data.success) {
+        console.log('绑定成功！团队:', data.data.teamName);
         setIsBound(true);
         setTeamName(data.data.teamName);
         showMessage('绑定成功！', 'success');
         // 重新获取用户信息
         setTimeout(() => checkUserStatus(), 500);
       } else if (data.alreadyBound) {
+        console.log('钱包已绑定');
         setIsBound(true);
         showMessage('该钱包已经绑定过了', 'error');
       } else {
+        console.error('绑定失败:', data.message);
         showMessage(data.message || '绑定失败', 'error');
       }
     } catch (error) {
