@@ -7,7 +7,7 @@ const db = useRedis
 
 export async function GET() {
   try {
-    const stats = db.getStats();
+    const stats = await db.getStats();
     return NextResponse.json(stats);
   } catch (error) {
     console.error('获取统计数据失败:', error);

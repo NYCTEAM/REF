@@ -8,7 +8,7 @@ const db = useRedis
 export async function GET(request, { params }) {
   try {
     const { address } = params;
-    const result = db.getUserInfo(address);
+    const result = await db.getUserInfo(address);
     return NextResponse.json(result);
   } catch (error) {
     console.error('查询用户失败:', error);

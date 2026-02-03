@@ -33,7 +33,7 @@ export async function POST(request) {
     }
 
     // 绑定推荐关系
-    const result = db.bindReferral(walletAddress, referrerAddress, teamName);
+    const result = await db.bindReferral(walletAddress, referrerAddress, teamName);
     
     if (!result.success) {
       return NextResponse.json(
