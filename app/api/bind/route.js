@@ -1,25 +1,5 @@
 import { NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
-
-// 初始化数据库
-function getDb() {
-  const dbPath = path.join(process.cwd(), 'referrals.db');
-  const db = new Database(dbPath);
-  
-  // 创建表
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      wallet_address TEXT UNIQUE NOT NULL,
-      referrer_address TEXT,
-      team_name TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  
-  return db;
-}
+import { db } from '@/lib/db';
 
 export async function POST(request) {
   try {
@@ -48,43 +28,21 @@ export async function POST(request) {
       );
     }
 
-    const db = getDb();
-
-    // 检查是否已经绑定
-    const existingUser = db.prepare('SELECT * FROM users WHERE wallet_address = ?').get(walletAddress);
+    // 绑定推荐关系
+    const result = db.bindReferral(walletAddress, referrerAddress, teamName);
     
-    if (existingUser) {
-      db.close();
+    if (!result.success) {
       return NextResponse.json(
         { success: false, message: '该钱包地址已经绑定过了', alreadyBound: true },
         { status: 400 }
       );
     }
 
-    // 插入新用户
-    const stmt = db.prepare(`
-      INSERT INTO users (wallet_address, referrer_address, team_name)
-      VALUES (?, ?, ?)
-    `);
-
-    try {
-      stmt.run(walletAddress, referrerAddress || null, teamName);
-      db.close();
-      
-      return NextResponse.json({
-        success: true,
-        message: '绑定成功'
-      });
-    } catch (err) {
-      db.close();
-      if (err.message.includes('UNIQUE constraint failed')) {
-        return NextResponse.json(
-          { success: false, message: '该钱包地址已经绑定过了', alreadyBound: true },
-          { status: 400 }
-        );
-      }
-      throw err;
-    }
+    return NextResponse.json({
+      success: true,
+      message: '绑定成功',
+      data: { teamName }
+    });
   } catch (error) {
     console.error('绑定失败:', error);
     return NextResponse.json(
