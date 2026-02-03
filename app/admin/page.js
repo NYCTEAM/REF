@@ -516,19 +516,19 @@ export default function AdminPage() {
           )}
         </div>
 
-        {/* 所有用户数据列表 */}
-        {stats?.allUsers && (
-          <div className="bg-white rounded-2xl shadow-xl p-8 mt-8">
-            <div className="flex items-center justify-between mb-6">
+        {/* 按团队分组的用户明细 */}
+        {stats && (
+          <div className="mt-8 space-y-8">
+            <div className="flex items-center justify-between">
               <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <Users className="w-6 h-6" />
-                所有注册用户 ({stats.allUsers.length})
+                团队成员明细
               </h2>
               <button
                 onClick={() => {
-                  /* 简易CSV导出逻辑 */
+                  /* 导出所有数据的CSV */
                   const headers = ['钱包地址', '推荐人', '所属团队', '加入时间'];
-                  const rows = stats.allUsers.map(u => [
+                  const rows = (stats.allUsers || []).map(u => [
                     u.wallet_address,
                     u.referrer_address || '无',
                     u.team_name,
@@ -541,62 +541,85 @@ export default function AdminPage() {
                   const url = URL.createObjectURL(blob);
                   const link = document.createElement('a');
                   link.href = url;
-                  link.download = `用户列表_${new Date().toISOString().slice(0,10)}.csv`;
+                  link.download = `所有用户明细_${new Date().toISOString().slice(0,10)}.csv`;
                   link.click();
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 shadow-sm"
               >
                 <Download className="w-4 h-4" />
-                导出数据
+                导出所有数据
               </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">序号</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">钱包地址</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">推荐人</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">所属团队</th>
-                    <th className="text-left py-3 px-4 font-semibold text-gray-700">加入时间</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {stats.allUsers.length === 0 ? (
-                    <tr>
-                      <td colSpan="5" className="py-8 text-center text-gray-500">
-                        暂无用户数据
-                      </td>
-                    </tr>
-                  ) : (
-                    stats.allUsers.map((user, index) => (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
-                        <td className="py-3 px-4 text-gray-500">{index + 1}</td>
-                        <td className="py-3 px-4">
-                          <span className="font-mono text-sm text-gray-700">{user.wallet_address}</span>
-                        </td>
-                        <td className="py-3 px-4">
-                          {user.referrer_address ? (
-                            <span className="font-mono text-sm text-gray-600">{user.referrer_address}</span>
+            {/* 遍历团队显示列表 */}
+            {(stats.teams && stats.teams.length > 0) ? (
+              stats.teams.map((team, teamIndex) => {
+                // 筛选出该团队的成员
+                const teamMembers = (stats.allUsers || []).filter(u => u.team_name === team.team_name);
+                
+                return (
+                  <div key={teamIndex} className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-blue-100 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">
+                          {teamIndex + 1}
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-800">{team.team_name}</h3>
+                          <p className="text-sm text-gray-500">成员数: {teamMembers.length}</p>
+                        </div>
+                      </div>
+                      {/* 如果数据有出入，优先以列表为准 */}
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="bg-gray-50 border-b border-gray-200">
+                            <th className="text-left py-3 px-6 font-semibold text-gray-600 w-16">#</th>
+                            <th className="text-left py-3 px-6 font-semibold text-gray-600">钱包地址</th>
+                            <th className="text-left py-3 px-6 font-semibold text-gray-600">推荐人</th>
+                            <th className="text-left py-3 px-6 font-semibold text-gray-600">加入时间</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {teamMembers.length === 0 ? (
+                            <tr>
+                              <td colSpan="4" className="py-8 text-center text-gray-400">
+                                该团队暂无成员
+                              </td>
+                            </tr>
                           ) : (
-                            <span className="text-gray-400 text-sm">无</span>
+                            teamMembers.map((member, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                <td className="py-3 px-6 text-gray-400">{idx + 1}</td>
+                                <td className="py-3 px-6">
+                                  <span className="font-mono text-sm text-gray-700">{member.wallet_address}</span>
+                                </td>
+                                <td className="py-3 px-6">
+                                  {member.referrer_address ? (
+                                    <span className="font-mono text-sm text-gray-600">{member.referrer_address}</span>
+                                  ) : (
+                                    <span className="text-gray-300 text-xs italic">无</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-6 text-sm text-gray-500">
+                                  {formatDate(member.created_at)}
+                                </td>
+                              </tr>
+                            ))
                           )}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium border border-blue-100">
-                            {user.team_name}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600">
-                          {formatDate(user.created_at)}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-12 text-gray-500 bg-white rounded-2xl shadow">
+                暂无团队数据
+              </div>
+            )}
           </div>
         )}
 

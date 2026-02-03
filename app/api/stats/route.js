@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/sqlite-db.js';
 
+export const dynamic = 'force-dynamic'; // 强制不缓存，确保获取实时数据
+
 export async function GET() {
   try {
     console.log('=== 开始获取统计数据 ===');
