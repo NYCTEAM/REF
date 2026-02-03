@@ -16,14 +16,23 @@ export default function Home() {
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [availableTeams, setAvailableTeams] = useState([]);
 
-  // 预设团队列表
-  const defaultTeams = [
-    { id: 'eagle', name: 'Eagle Team', description: '雄鹰战队 - 展翅高飞' },
-    { id: 'tiger', name: 'Tiger Team', description: '猛虎战队 - 勇往直前' },
-    { id: 'lion', name: 'Lion Team', description: '雄狮战队 - 王者归来' },
-    { id: 'wolf', name: 'Wolf Team', description: '战狼战队 - 团结必胜' }
-  ];
+  // 从API加载团队列表
+  useEffect(() => {
+    const fetchTeams = async () => {
+      try {
+        const res = await fetch('/api/teams');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setAvailableTeams(data);
+        }
+      } catch (error) {
+        console.error('获取团队列表失败:', error);
+      }
+    };
+    fetchTeams();
+  }, []);
 
   // 从URL获取推荐人地址
   useEffect(() => {
@@ -334,29 +343,41 @@ export default function Home() {
                 <Users className="w-6 h-6" />
                 选择团队
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {defaultTeams.map((team) => (
-                  <div 
-                    key={team.id}
-                    onClick={() => setSelectedTeam(team.name)}
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
-                      selectedTeam === team.name 
-                        ? 'border-blue-500 bg-blue-50' 
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className={`font-bold ${selectedTeam === team.name ? 'text-blue-700' : 'text-gray-800'}`}>
-                        {team.name}
-                      </h3>
-                      {selectedTeam === team.name && (
-                        <CheckCircle className="w-5 h-5 text-blue-600" />
-                      )}
+              
+              {availableTeams.length === 0 ? (
+                <div className="bg-white p-6 rounded-xl border-2 border-dashed border-gray-300 text-center">
+                  <p className="text-gray-500 mb-2">暂无团队可选</p>
+                  <p className="text-sm text-gray-400">请联系管理员创建团队或使用推荐链接加入</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {availableTeams.map((team) => (
+                    <div 
+                      key={team.id}
+                      onClick={() => setSelectedTeam(team.name)}
+                      className={`p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-md ${
+                        selectedTeam === team.name 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className={`font-bold ${selectedTeam === team.name ? 'text-blue-700' : 'text-gray-800'}`}>
+                          {team.name}
+                        </h3>
+                        {selectedTeam === team.name && (
+                          <CheckCircle className="w-5 h-5 text-blue-600" />
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">{team.description}</p>
+                      <div className="flex items-center gap-2 text-xs text-gray-500 bg-white/50 px-2 py-1 rounded w-fit">
+                        <Users className="w-3 h-3" />
+                        <span>{team.member_count || 0} 人已加入</span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600">{team.description}</p>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
