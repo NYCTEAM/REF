@@ -37,7 +37,7 @@ Branch: main
 - **Publish Directory**: `/`
 
 #### Network（网络设置）
-- **Ports Exposes**: `3000`
+- **Ports Exposes**: `3004`
 - **Port Mappings**: 留空（自动映射）
 - **Network Aliases**: 留空
 
@@ -46,7 +46,7 @@ Branch: main
 如果需要，可以添加：
 ```
 NODE_ENV=production
-PORT=3000
+PORT=3004
 ```
 
 ### 5. 部署
@@ -86,9 +86,9 @@ PORT=3000
 
 ### 端口设置
 ```
-Ports Exposes: 3000
+Ports Exposes: 3004
 ```
-Next.js默认运行在3000端口
+应用配置运行在3004端口
 
 ### 域名设置
 根据您的需求配置：
@@ -199,7 +199,7 @@ Coolify可以配置GitHub Webhook自动部署：
 
 ```yaml
 Build Pack: Nixpacks
-Port: 3000
+Port: 3004
 Domain: gotlaweb3.com
 Auto Deploy: ✅ 启用
 Health Check: ✅ 启用
