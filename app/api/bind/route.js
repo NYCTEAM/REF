@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-// 使用Redis数据库（如果REDIS_URL环境变量存在）或内存数据库
-const useRedis = process.env.REDIS_URL ? true : false;
-const db = useRedis 
-  ? await import('../../../lib/redis-db.js').then(m => m.db)
-  : await import('../../../lib/db.js').then(m => m.db);
+import { db } from '../../../lib/sqlite-db.js';
 
 export async function POST(request) {
   try {
@@ -33,7 +29,7 @@ export async function POST(request) {
     }
 
     // 绑定推荐关系
-    const result = await db.bindReferral(walletAddress, referrerAddress, teamName);
+    const result = db.bindReferral(walletAddress, referrerAddress, teamName);
     
     if (!result.success) {
       return NextResponse.json(

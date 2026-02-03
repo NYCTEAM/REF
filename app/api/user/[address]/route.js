@@ -1,14 +1,10 @@
 import { NextResponse } from 'next/server';
-// 使用Redis数据库（如果REDIS_URL环境变量存在）或内存数据库
-const useRedis = process.env.REDIS_URL ? true : false;
-const db = useRedis 
-  ? await import('../../../../lib/redis-db.js').then(m => m.db)
-  : await import('../../../../lib/db.js').then(m => m.db);
+import { db } from '../../../../lib/sqlite-db.js';
 
 export async function GET(request, { params }) {
   try {
     const { address } = params;
-    const result = await db.getUserInfo(address);
+    const result = db.getUserInfo(address);
     return NextResponse.json(result);
   } catch (error) {
     console.error('查询用户失败:', error);
