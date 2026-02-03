@@ -332,7 +332,13 @@ export default function AdminPage() {
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" />
                 </div>
-                <span className="text-3xl font-bold text-gray-800">{stats.totalUsers || 0}</span>
+                <span className="text-3xl font-bold text-gray-800">
+                  {/* 优先显示API数据，如果为0，则计算团队成员总和作为兜底 */}
+                  {stats.totalUsers > 0 
+                    ? stats.totalUsers 
+                    : teamLeaders.reduce((acc, team) => acc + (team.member_count || 0), 0)
+                  }
+                </span>
               </div>
               <h3 className="text-gray-600 font-semibold">总用户数</h3>
             </div>
@@ -342,7 +348,10 @@ export default function AdminPage() {
                 <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                   <LinkIcon className="w-6 h-6 text-green-600" />
                 </div>
-                <span className="text-3xl font-bold text-gray-800">{stats.usersWithReferrer || 0}</span>
+                <span className="text-3xl font-bold text-gray-800">
+                  {/* 如果总用户数有显示，推荐数大概率也是它（目前大部分都是推荐的），或者显示API数据 */}
+                  {stats.usersWithReferrer || 0}
+                </span>
               </div>
               <h3 className="text-gray-600 font-semibold">推荐用户数</h3>
             </div>
@@ -353,7 +362,8 @@ export default function AdminPage() {
                   <TrendingUp className="w-6 h-6 text-purple-600" />
                 </div>
                 <span className="text-3xl font-bold text-gray-800">
-                  {stats.teamsCount !== undefined ? stats.teamsCount : (stats.teams?.length || 0)}
+                  {/* 优先显示API数据，如果为0或undefined，直接使用本地列表长度 */}
+                  {stats.teamsCount > 0 ? stats.teamsCount : teamLeaders.length}
                 </span>
               </div>
               <h3 className="text-gray-600 font-semibold">团队数量</h3>
