@@ -352,7 +352,9 @@ export default function AdminPage() {
                 <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-purple-600" />
                 </div>
-                <span className="text-3xl font-bold text-gray-800">{stats.teamsCount || 0}</span>
+                <span className="text-3xl font-bold text-gray-800">
+                  {stats.teamsCount !== undefined ? stats.teamsCount : (stats.teams?.length || 0)}
+                </span>
               </div>
               <h3 className="text-gray-600 font-semibold">团队数量</h3>
             </div>
