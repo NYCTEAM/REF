@@ -14,9 +14,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]); // 直推成员
+  const [teammates, setTeammates] = useState([]); // 战队所有成员
   const [selectedTeam, setSelectedTeam] = useState('');
   const [availableTeams, setAvailableTeams] = useState([]);
+  const [copiedTeammate, setCopiedTeammate] = useState(''); // 记录刚复制的地址
 
   // 从API加载团队列表
   useEffect(() => {
@@ -146,11 +148,18 @@ export default function Home() {
           }
         }
         setTeamMembers(data.teamMembers || []);
+        setTeammates(data.teammates || []); // 设置战队成员
         showMessage('该钱包地址已绑定，无法重复绑定', 'success');
       }
     } catch (error) {
       console.error('检查用户状态失败:', error);
     }
+  };
+
+  const copyAddress = (address) => {
+    navigator.clipboard.writeText(address);
+    setCopiedTeammate(address);
+    setTimeout(() => setCopiedTeammate(''), 2000);
   };
 
   const connectWallet = async () => {
@@ -493,12 +502,64 @@ export default function Home() {
             </div>
           )}
 
-          {/* 团队成员 */}
+          {/* 战队大厅 (所有同团队成员) */}
+          {isBound && (
+            <div className="mb-8 p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-indigo-600" />
+                  战队大厅 ({teamName})
+                </h3>
+                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
+                  总人数: {teammates.length}
+                </span>
+              </div>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                {teammates.length > 0 ? (
+                  teammates.map((member, index) => (
+                    <div key={index} className="p-3 bg-white rounded-lg border border-indigo-100 flex items-center justify-between hover:shadow-sm transition-shadow">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className={`font-mono text-sm ${member.wallet_address.toLowerCase() === walletAddress.toLowerCase() ? 'text-indigo-600 font-bold' : 'text-gray-700'}`}>
+                            {member.wallet_address}
+                            {member.wallet_address.toLowerCase() === walletAddress.toLowerCase() && ' (我)'}
+                          </p>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          加入时间: {new Date(member.created_at).toLocaleString('zh-CN')}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => copyAddress(member.wallet_address)}
+                        className={`p-2 rounded-lg transition-colors ${
+                          copiedTeammate === member.wallet_address
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
+                        }`}
+                        title="复制地址"
+                      >
+                        {copiedTeammate === member.wallet_address ? (
+                          <CheckCircle className="w-4 h-4" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-500 py-4">暂无其他成员</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 我的直推团队成员 */}
           {teamMembers.length > 0 && (
             <div className="mt-8 p-6 bg-purple-50 rounded-xl border-2 border-purple-200">
               <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <Users className="w-6 h-6 text-purple-600" />
-                我的团队成员 ({teamMembers.length})
+                我的直推成员 ({teamMembers.length})
               </h3>
               <div className="space-y-3">
                 {teamMembers.map((member, index) => (
