@@ -31,6 +31,32 @@ export default function Home() {
     }
   }, []);
 
+  // 页面加载时检查钱包连接状态
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          // 检查是否已经连接
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_accounts' 
+          });
+          
+          if (accounts.length > 0) {
+            console.log('检测到已连接的钱包:', accounts[0]);
+            setWalletAddress(accounts[0]);
+            setIsConnected(true);
+          } else {
+            console.log('未检测到已连接的钱包');
+          }
+        } catch (error) {
+          console.error('检查钱包连接失败:', error);
+        }
+      }
+    };
+
+    checkWalletConnection();
+  }, []);
+
   // 监听钱包账户变化
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
