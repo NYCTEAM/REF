@@ -31,6 +31,52 @@ export default function Home() {
     }
   }, []);
 
+  // 监听钱包账户变化
+  useEffect(() => {
+    if (typeof window.ethereum !== 'undefined') {
+      // 监听账户切换
+      const handleAccountsChanged = (accounts) => {
+        console.log('账户已切换:', accounts);
+        if (accounts.length === 0) {
+          // 用户断开连接
+          setWalletAddress('');
+          setIsConnected(false);
+          setIsBound(false);
+          setTeamName('');
+          setTeamMembers([]);
+          showMessage('钱包已断开连接', 'error');
+        } else {
+          // 切换到新账户
+          const newAddress = accounts[0];
+          console.log('新账户地址:', newAddress);
+          setWalletAddress(newAddress);
+          setIsConnected(true);
+          setIsBound(false);
+          setTeamName('');
+          setTeamMembers([]);
+          showMessage('已切换到新钱包', 'success');
+        }
+      };
+
+      // 监听链切换
+      const handleChainChanged = () => {
+        console.log('链已切换，刷新页面');
+        window.location.reload();
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      // 清理函数
+      return () => {
+        if (window.ethereum.removeListener) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, []);
+
   // 检查用户是否已绑定
   useEffect(() => {
     if (walletAddress) {
@@ -253,9 +299,24 @@ export default function Home() {
                 {loading ? '连接中...' : '连接MetaMask钱包'}
               </button>
             ) : (
-              <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200">
-                <p className="text-sm text-gray-600 mb-2">已连接钱包:</p>
-                <p className="font-mono text-sm text-gray-800 break-all">{walletAddress}</p>
+              <div className="space-y-3">
+                <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200">
+                  <p className="text-sm text-gray-600 mb-2">已连接钱包:</p>
+                  <p className="font-mono text-sm text-gray-800 break-all">{walletAddress}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setWalletAddress('');
+                    setIsConnected(false);
+                    setIsBound(false);
+                    setTeamName('');
+                    setTeamMembers([]);
+                    showMessage('已断开钱包连接', 'success');
+                  }}
+                  className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-all"
+                >
+                  断开连接
+                </button>
               </div>
             )}
           </div>
