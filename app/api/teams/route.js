@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../lib/sqlite-db.js';
+import { db } from '../../../lib/sqlite-db.js';
 
 export const dynamic = 'force-dynamic'; // 确保不缓存，实时获取数据
 
