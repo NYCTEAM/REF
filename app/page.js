@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield } from 'lucide-react';
+import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
