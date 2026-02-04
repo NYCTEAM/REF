@@ -293,9 +293,10 @@ export default function AdminPage() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg disabled:opacity-50"
               >
-                登录
+                {loading ? '登录中...' : '登录后台'}
               </button>
             </form>
 
