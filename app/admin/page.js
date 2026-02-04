@@ -269,7 +269,7 @@ export default function AdminPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@example.com"
+                  placeholder="请输入管理员邮箱"
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
                   required
                 />
@@ -298,14 +298,6 @@ export default function AdminPage() {
               </button>
             </form>
 
-            {/* 提示信息 */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm text-gray-600 text-center">
-                <strong>测试账号:</strong><br />
-                邮箱: admin@example.com<br />
-                密码: admin123
-              </p>
-            </div>
           </div>
         </div>
       </div>
