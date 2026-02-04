@@ -8,6 +8,7 @@ export default function Home() {
   const [walletAddress, setWalletAddress] = useState('');
   const [referrerAddress, setReferrerAddress] = useState('');
   const [referrerName, setReferrerName] = useState('');
+  const [invitingTeamName, setInvitingTeamName] = useState(''); // 新增：邀请团队名称
   const [teamName, setTeamName] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isBound, setIsBound] = useState(false);
@@ -42,12 +43,30 @@ export default function Home() {
     const ref = urlParams.get('ref');
     if (ref) {
       setReferrerAddress(ref);
-      // 从本地存储获取团队长名称
-      const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
-      const leader = leaders.find(l => l.address.toLowerCase() === ref.toLowerCase());
-      if (leader) {
-        setReferrerName(leader.name);
-      }
+      
+      // 调用API获取团队信息
+      const fetchTeamInfo = async () => {
+        try {
+          const res = await fetch(`/api/team-info?address=${ref}`);
+          const data = await res.json();
+          if (data.success && data.team) {
+            setReferrerName(data.team.name);
+            setInvitingTeamName(data.team.name);
+          } else {
+            // 如果没找到团队，尝试从本地存储获取（备用）
+            const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
+            const leader = leaders.find(l => l.address.toLowerCase() === ref.toLowerCase());
+            if (leader) {
+              setReferrerName(leader.name);
+              setInvitingTeamName(leader.name);
+            }
+          }
+        } catch (error) {
+          console.error('获取团队信息失败:', error);
+        }
+      };
+      
+      fetchTeamInfo();
     }
   }, []);
 
@@ -323,9 +342,11 @@ export default function Home() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800">
-                    {referrerName || '团队邀请'}
+                    {invitingTeamName || '团队邀请'}
                   </h2>
-                  <p className="text-sm text-blue-600">您收到了团队邀请</p>
+                  <p className="text-sm text-blue-600">
+                    {invitingTeamName ? `${invitingTeamName} 邀请您加入` : '您收到了团队邀请'}
+                  </p>
                 </div>
               </div>
               
@@ -339,7 +360,7 @@ export default function Home() {
               <div className="flex items-start gap-2 bg-blue-100 p-3 rounded-lg">
                 <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-gray-700">
-                  连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{referrerName || `团队-${referrerAddress.substring(0, 8)}`}</span>
+                  连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{invitingTeamName || `团队-${referrerAddress.substring(0, 8)}`}</span>
                 </p>
               </div>
             </div>
