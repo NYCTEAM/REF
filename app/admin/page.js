@@ -623,7 +623,50 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* 成员详情模态框 */}
+        {/* 危险区域 */}
+        <div className="mt-12 mb-8 p-6 bg-red-50 rounded-2xl border-2 border-red-100">
+          <h2 className="text-xl font-bold text-red-800 mb-4 flex items-center gap-2">
+            <AlertCircle className="w-6 h-6" />
+            危险区域
+          </h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-red-900">重置所有数据</p>
+              <p className="text-sm text-red-700 mt-1">
+                此操作将删除所有团队和用户数据，且<span className="font-bold underline">无法恢复</span>。
+                系统将恢复到初始安装状态。
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                if (confirm('警告：您确定要删除所有数据吗？此操作无法撤销！') && confirm('再次确认：这真的会清空所有数据！')) {
+                  try {
+                    const res = await fetch('/api/admin/reset', { method: 'POST' });
+                    const data = await res.json();
+                    if (data.success) {
+                      showMessage('系统已重置', 'success');
+                      fetchTeams();
+                      fetchStats();
+                      // 清除本地存储的团队长信息
+                      localStorage.removeItem('teamLeaders');
+                    } else {
+                      showMessage('重置失败', 'error');
+                    }
+                  } catch (e) {
+                    console.error(e);
+                    showMessage('请求失败', 'error');
+                  }
+                }
+              }}
+              className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors shadow-lg hover:shadow-xl flex items-center gap-2"
+            >
+              <Trash2 className="w-5 h-5" />
+              重置系统
+            </button>
+          </div>
+        </div>
+
+      {/* 成员详情模态框 */}
         {isMembersModalOpen && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col">

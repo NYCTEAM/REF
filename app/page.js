@@ -273,7 +273,13 @@ export default function Home() {
         console.log('绑定成功！团队:', data.data.teamName);
         setIsBound(true);
         setTeamName(data.data.teamName);
-        showMessage('绑定成功！', 'success');
+        showMessage('绑定成功！正在跳转...', 'success');
+        
+        // 绑定成功后自动跳转到 Swap 页面
+        setTimeout(() => {
+          window.location.href = 'https://eagleswap.llc/swap';
+        }, 1500);
+        
         // 重新获取用户信息
         setTimeout(() => checkUserStatus(), 500);
       } else if (data.alreadyBound) {
