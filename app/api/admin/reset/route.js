@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '../../../lib/sqlite-db.js';
+import { db } from '../../../../lib/sqlite-db.js';
 
 export async function POST() {
   try {
