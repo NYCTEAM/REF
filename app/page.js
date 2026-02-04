@@ -31,20 +31,18 @@ export default function Home() {
           setAvailableTeams(data);
         }
       } catch (error) {
-        console.error('获取团队列表失败:', error);
+        console.error('获取列表失败:', error);
       }
     };
     fetchTeams();
   }, []);
 
-  // 从URL获取推荐人地址
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
     if (ref) {
       setReferrerAddress(ref);
       
-      // 调用API获取团队信息
       const fetchTeamInfo = async () => {
         try {
           const res = await fetch(`/api/team-info?address=${ref}`);
@@ -53,7 +51,6 @@ export default function Home() {
             setReferrerName(data.team.name);
             setInvitingTeamName(data.team.name);
           } else {
-            // 如果没找到团队，尝试从本地存储获取（备用）
             const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
             const leader = leaders.find(l => l.address.toLowerCase() === ref.toLowerCase());
             if (leader) {
@@ -62,7 +59,7 @@ export default function Home() {
             }
           }
         } catch (error) {
-          console.error('获取团队信息失败:', error);
+          console.error('获取信息失败:', error);
         }
       };
       
@@ -70,12 +67,10 @@ export default function Home() {
     }
   }, []);
 
-  // 页面加载时检查钱包连接状态
   useEffect(() => {
     const checkWalletConnection = async () => {
       if (typeof window.ethereum !== 'undefined') {
         try {
-          // 检查是否已经连接
           const accounts = await window.ethereum.request({ 
             method: 'eth_accounts' 
           });
@@ -96,14 +91,11 @@ export default function Home() {
     checkWalletConnection();
   }, []);
 
-  // 监听钱包账户变化
   useEffect(() => {
     if (typeof window.ethereum !== 'undefined') {
-      // 监听账户切换
       const handleAccountsChanged = (accounts) => {
         console.log('账户已切换:', accounts);
         if (accounts.length === 0) {
-          // 用户断开连接
           setWalletAddress('');
           setIsConnected(false);
           setIsBound(false);
@@ -111,7 +103,6 @@ export default function Home() {
           setTeamMembers([]);
           showMessage('钱包已断开连接', 'error');
         } else {
-          // 切换到新账户
           const newAddress = accounts[0];
           console.log('新账户地址:', newAddress);
           setWalletAddress(newAddress);
@@ -123,7 +114,6 @@ export default function Home() {
         }
       };
 
-      // 监听链切换
       const handleChainChanged = () => {
         console.log('链已切换，刷新页面');
         window.location.reload();
@@ -132,7 +122,6 @@ export default function Home() {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
       window.ethereum.on('chainChanged', handleChainChanged);
 
-      // 清理函数
       return () => {
         if (window.ethereum.removeListener) {
           window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
@@ -142,7 +131,6 @@ export default function Home() {
     }
   }, []);
 
-  // 检查用户是否已绑定
   useEffect(() => {
     if (walletAddress) {
       checkUserStatus();
@@ -159,7 +147,6 @@ export default function Home() {
         setTeamName(data.user.team_name);
         if (data.user.referrer_address) {
           setReferrerAddress(data.user.referrer_address);
-          // 从localStorage获取团队长名称
           const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
           const leader = leaders.find(l => l.address.toLowerCase() === data.user.referrer_address.toLowerCase());
           if (leader) {
@@ -167,9 +154,8 @@ export default function Home() {
           }
         }
         setTeamMembers(data.teamMembers || []);
-        setTeammates(data.teammates || []); // 设置战队成员
-        // 已绑定，自动跳转
-        showMessage('检测到您已加入团队，正在跳转...', 'success');
+        setTeammates(data.teammates || []); 
+        showMessage('验证成功，正在跳转...', 'success');
         setTimeout(() => {
           window.location.href = 'https://eagleswap.llc/swap';
         }, 1500);
@@ -208,16 +194,16 @@ export default function Home() {
       const address = accounts[0];
       setWalletAddress(address);
       setIsConnected(true);
-      showMessage('钱包连接成功', 'success');
+      showMessage('连接成功', 'success');
     } catch (error) {
       console.error('连接钱包失败:', error);
       
       if (error.code === 4001) {
-        showMessage('您拒绝了连接请求', 'error');
+        showMessage('连接被拒绝', 'error');
       } else if (error.code === -32002) {
-        showMessage('MetaMask已有待处理的连接请求，请检查MetaMask弹窗', 'error');
+        showMessage('请求处理中，请检查钱包', 'error');
       } else {
-        showMessage(`连接钱包失败: ${error.message}`, 'error');
+        showMessage(`连接失败: ${error.message}`, 'error');
       }
     } finally {
       setLoading(false);
@@ -230,13 +216,10 @@ export default function Home() {
       return;
     }
 
-    // 确定团队名称
     let finalTeamName = teamName;
     
-    // 如果有推荐人，优先使用推荐人的团队（逻辑上通常跟随推荐人）
-    // 或者如果没有推荐人，必须选择一个团队
     if (!referrerAddress && !selectedTeam) {
-      showMessage('请先选择一个团队加入', 'error');
+      showMessage('请选择一个接入点', 'error');
       return;
     }
 
@@ -245,12 +228,12 @@ export default function Home() {
     } else if (referrerName) {
       finalTeamName = referrerName;
     } else if (referrerAddress) {
-      finalTeamName = `团队-${referrerAddress.substring(0, 6)}`;
+      finalTeamName = `Node-${referrerAddress.substring(0, 6)}`;
     } else {
-      finalTeamName = '默认团队';
+      finalTeamName = 'Default Node';
     }
 
-    console.log('绑定参数:', {
+    console.log('Bind params:', {
       walletAddress,
       referrerAddress,
       teamName: finalTeamName
@@ -271,33 +254,29 @@ export default function Home() {
       });
 
       const data = await response.json();
-      console.log('绑定API响应:', data);
+      console.log('Bind API response:', data);
 
       if (data.success) {
-        console.log('绑定成功！团队:', data.data.teamName);
         setIsBound(true);
         setTeamName(data.data.teamName);
-        showMessage('绑定成功！正在跳转...', 'success');
+        showMessage('加入成功，正在跳转...', 'success');
         
-        // 绑定成功后自动跳转到 Swap 页面
         setTimeout(() => {
           window.location.href = 'https://eagleswap.llc/swap';
         }, 1500);
         
-        // 重新获取用户信息
         setTimeout(() => checkUserStatus(), 500);
       } else if (data.alreadyBound) {
-        console.log('钱包已绑定');
         setIsBound(true);
-        setTeamName(data.user?.team_name || finalTeamName); // 尝试使用返回的已有团队名
-        showMessage('该钱包已经绑定过了', 'error');
+        setTeamName(data.user?.team_name || finalTeamName);
+        showMessage('该钱包已在列表中', 'error');
       } else {
-        console.error('绑定失败:', data.message);
-        showMessage(data.message || '绑定失败', 'error');
+        console.error('Bind failed:', data.message);
+        showMessage('加入失败，请重试', 'error');
       }
     } catch (error) {
-      console.error('绑定失败:', error);
-      showMessage('绑定失败，请重试', 'error');
+      console.error('Bind error:', error);
+      showMessage('网络错误，请重试', 'error');
     } finally {
       setLoading(false);
     }
@@ -313,7 +292,7 @@ export default function Home() {
     if (!walletAddress) return;
     const link = `${window.location.origin}?ref=${walletAddress}`;
     navigator.clipboard.writeText(link);
-    showMessage('推荐链接已复制', 'success');
+    showMessage('链接已复制', 'success');
   };
 
   return (
@@ -321,8 +300,8 @@ export default function Home() {
       <div className="max-w-4xl mx-auto">
         {/* 标题 */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">推荐系统</h1>
-          <p className="text-xl text-gray-600">连接钱包，加入团队</p>
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">Eagle Swap</h1>
+          <p className="text-xl text-gray-600">欢迎使用 Eagle Swap</p>
         </div>
 
         {/* 消息提示 */}
@@ -344,18 +323,18 @@ export default function Home() {
         {/* 主卡片 */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           
-          {/* 团队选择 - 仅在未绑定且无推荐人时显示 */}
+          {/* 接入点选择 - 仅在未绑定且无推荐人时显示 */}
           {!isBound && !referrerAddress && (
             <div className="mb-8">
               <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <Users className="w-6 h-6" />
-                选择团队
+                选择接入点
               </h2>
               
               {availableTeams.length === 0 ? (
                 <div className="bg-white p-6 rounded-xl border-2 border-dashed border-gray-300 text-center">
-                  <p className="text-gray-500 mb-2">暂无团队可选</p>
-                  <p className="text-sm text-gray-400">请联系管理员创建团队或使用推荐链接加入</p>
+                  <p className="text-gray-500 mb-2">暂无可用接入点</p>
+                  <p className="text-sm text-gray-400">请联系客服</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -380,7 +359,7 @@ export default function Home() {
                       <p className="text-sm text-gray-600 mb-2">{team.description}</p>
                       <div className="flex items-center gap-2 text-xs text-gray-500 bg-white/50 px-2 py-1 rounded w-fit">
                         <Users className="w-3 h-3" />
-                        <span>{team.member_count || 0} 人已加入</span>
+                        <span>{team.member_count || 0} 已加入</span>
                       </div>
                     </div>
                   ))}
@@ -393,7 +372,7 @@ export default function Home() {
           <div className="mb-8">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
               <Wallet className="w-6 h-6" />
-              钱包连接
+              连接钱包
             </h2>
             
             {!isConnected ? (
@@ -402,7 +381,7 @@ export default function Home() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? '连接中...' : '连接MetaMask钱包'}
+                {loading ? '连接中...' : '连接钱包'}
               </button>
             ) : (
               <div className="space-y-3">
@@ -417,7 +396,7 @@ export default function Home() {
                     setIsBound(false);
                     setTeamName('');
                     setTeamMembers([]);
-                    showMessage('已断开钱包连接', 'success');
+                    showMessage('已断开连接', 'success');
                   }}
                   className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-all"
                 >
@@ -435,7 +414,7 @@ export default function Home() {
                 disabled={loading}
                 className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? '绑定中...' : '确认绑定'}
+                {loading ? '处理中...' : '确认加入'}
               </button>
             </div>
           )}
@@ -445,14 +424,14 @@ export default function Home() {
             <div className="text-center py-12">
               <div className="mb-6">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">已成功加入团队</h2>
-                <p className="text-gray-600">正在前往 Eagle Swap...</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">验证成功</h2>
+                <p className="text-gray-600">正在跳转...</p>
               </div>
               <button
                 onClick={() => window.location.href = 'https://eagleswap.llc/swap'}
                 className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
               >
-                立即跳转
+                立即前往
               </button>
             </div>
           )}
