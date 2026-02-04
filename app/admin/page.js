@@ -4,12 +4,6 @@ import { useState, useEffect } from 'react';
 import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 
-// 管理员邮箱列表（实际项目中应该存储在后端数据库）
-const ADMIN_EMAILS = [
-  'admin@example.com',
-  'manager@example.com'
-];
-
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [email, setEmail] = useState('');
@@ -173,7 +167,7 @@ export default function AdminPage() {
     });
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     
     // 验证邮箱格式
@@ -189,16 +183,35 @@ export default function AdminPage() {
       return;
     }
 
-    // 简单验证（实际项目中应该调用后端API验证）
-    if (ADMIN_EMAILS.includes(email) && password === 'admin123') {
-      localStorage.setItem('adminEmail', email);
-      setIsLoggedIn(true);
-      setAdminEmail(email);
-      showMessage('登录成功', 'success');
-      fetchTeams();
-      fetchStats();
-    } else {
-      showMessage('邮箱或密码错误', 'error');
+    setLoading(true);
+
+    try {
+      // 调用后端登录接口进行验证 (安全)
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        localStorage.setItem('adminEmail', email);
+        setIsLoggedIn(true);
+        setAdminEmail(email);
+        showMessage('登录成功', 'success');
+        fetchTeams();
+        fetchStats();
+      } else {
+        showMessage(data.message || '邮箱或密码错误', 'error');
+      }
+    } catch (error) {
+      console.error('登录请求失败:', error);
+      showMessage('系统错误，请稍后重试', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
