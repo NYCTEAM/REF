@@ -343,34 +343,7 @@ export default function Home() {
 
         {/* 主卡片 */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          {/* 推荐人信息 */}
-          {referrerAddress && !isBound && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-300 shadow-md">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                  <Users className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    {invitingTeamName || '团队邀请'}
-                  </h2>
-                  <p className="text-sm text-blue-600">
-                    {invitingTeamName ? `${invitingTeamName} 邀请您加入` : '您收到了团队邀请'}
-                  </p>
-                </div>
-              </div>
-              
-              {/* 已移除详细钱包地址显示 */}
-              
-              <div className="flex items-start gap-2 bg-blue-100 p-3 rounded-lg">
-                <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-gray-700">
-                  连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{invitingTeamName || '该团队'}</span>
-                </p>
-              </div>
-            </div>
-          )}
-
+          
           {/* 团队选择 - 仅在未绑定且无推荐人时显示 */}
           {!isBound && !referrerAddress && (
             <div className="mb-8">
