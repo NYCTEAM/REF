@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [newTeamDesc, setNewTeamDesc] = useState(''); // 新增描述字段
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [loading, setLoading] = useState(false);
   
   // 成员详情模态框状态
   const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
