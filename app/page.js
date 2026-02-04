@@ -168,7 +168,11 @@ export default function Home() {
         }
         setTeamMembers(data.teamMembers || []);
         setTeammates(data.teammates || []); // 设置战队成员
-        showMessage('该钱包地址已绑定，无法重复绑定', 'success');
+        // 已绑定，自动跳转
+        showMessage('检测到您已加入团队，正在跳转...', 'success');
+        setTimeout(() => {
+          window.location.href = 'https://eagleswap.llc/swap';
+        }, 1500);
       }
     } catch (error) {
       console.error('检查用户状态失败:', error);
@@ -356,17 +360,12 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg mb-3">
-                <p className="text-xs text-gray-500 mb-1">团队长钱包地址:</p>
-                <p className="text-gray-800 font-mono text-sm break-all">
-                  {referrerAddress}
-                </p>
-              </div>
+              {/* 已移除详细钱包地址显示 */}
               
               <div className="flex items-start gap-2 bg-blue-100 p-3 rounded-lg">
                 <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
                 <p className="text-sm text-gray-700">
-                  连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{invitingTeamName || `团队-${referrerAddress.substring(0, 8)}`}</span>
+                  连接钱包并确认后，您将加入 <span className="font-bold text-blue-700">{invitingTeamName || '该团队'}</span>
                 </p>
               </div>
             </div>
@@ -468,136 +467,20 @@ export default function Home() {
             </div>
           )}
 
-          {/* 已绑定信息 */}
+          {/* 已绑定 - 直接显示跳转提示 */}
           {isBound && (
-            <div className="mb-8">
-              {/* 已绑定警告 */}
-              <div className="mb-4 p-4 bg-yellow-50 rounded-xl border-2 border-yellow-300">
-                <div className="flex items-center gap-3">
-                  <AlertCircle className="w-6 h-6 text-yellow-600" />
-                  <div>
-                    <p className="font-semibold text-yellow-800">该钱包地址已绑定</p>
-                    <p className="text-sm text-yellow-700">每个钱包地址只能绑定一次，无法重复绑定或更改团队</p>
-                  </div>
-                </div>
+            <div className="text-center py-12">
+              <div className="mb-6">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">已成功加入团队</h2>
+                <p className="text-gray-600">正在前往 Eagle Swap...</p>
               </div>
-              
-              {/* 绑定详情 */}
-              <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-300">
-                <div className="flex items-center gap-3 mb-4">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
-                  <h3 className="text-xl font-semibold text-gray-800">绑定信息</h3>
-                </div>
-                <div className="space-y-3">
-                  <div className="p-3 bg-white rounded-lg">
-                    <p className="text-sm text-gray-600 mb-1">所属团队</p>
-                    <p className="text-lg font-bold text-gray-800">{teamName}</p>
-                  </div>
-                  {referrerAddress && (
-                    <div className="p-3 bg-white rounded-lg">
-                      <p className="text-sm text-gray-600 mb-1">推荐人</p>
-                      {referrerName && (
-                        <p className="text-lg font-bold text-gray-800 mb-1">{referrerName}</p>
-                      )}
-                      <p className="font-mono text-sm text-gray-600 break-all">{referrerAddress}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 推荐链接 */}
-          {isBound && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-300">
-              <p className="text-sm text-gray-700 font-semibold mb-3">分享您的推荐链接:</p>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${walletAddress}`}
-                  className="flex-1 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-mono"
-                />
-                <button
-                  onClick={copyReferralLink}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <LinkIcon className="w-4 h-4" />
-                  复制
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 战队大厅 (所有同团队成员) */}
-          {isBound && (
-            <div className="mb-8 p-6 bg-indigo-50 rounded-xl border-2 border-indigo-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-                  <Shield className="w-6 h-6 text-indigo-600" />
-                  战队大厅 ({teamName})
-                </h3>
-                <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm font-bold">
-                  总人数: {teammates.length}
-                </span>
-              </div>
-              
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
-                {teammates.length > 0 ? (
-                  teammates.map((member, index) => (
-                    <div key={index} className="p-3 bg-white rounded-lg border border-indigo-100 flex items-center justify-between hover:shadow-sm transition-shadow">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className={`font-mono text-sm ${member.wallet_address.toLowerCase() === walletAddress.toLowerCase() ? 'text-indigo-600 font-bold' : 'text-gray-700'}`}>
-                            {member.wallet_address}
-                            {member.wallet_address.toLowerCase() === walletAddress.toLowerCase() && ' (我)'}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          加入时间: {new Date(member.created_at).toLocaleString('zh-CN')}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => copyAddress(member.wallet_address)}
-                        className={`p-2 rounded-lg transition-colors ${
-                          copiedTeammate === member.wallet_address
-                            ? 'bg-green-100 text-green-600'
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-500'
-                        }`}
-                        title="复制地址"
-                      >
-                        {copiedTeammate === member.wallet_address ? (
-                          <CheckCircle className="w-4 h-4" />
-                        ) : (
-                          <Copy className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-center text-gray-500 py-4">暂无其他成员</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 我的直推团队成员 */}
-          {teamMembers.length > 0 && (
-            <div className="mt-8 p-6 bg-purple-50 rounded-xl border-2 border-purple-200">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                <Users className="w-6 h-6 text-purple-600" />
-                我的直推成员 ({teamMembers.length})
-              </h3>
-              <div className="space-y-3">
-                {teamMembers.map((member, index) => (
-                  <div key={index} className="p-3 bg-white rounded-lg border border-purple-100">
-                    <p className="font-mono text-sm text-gray-700">{member.wallet_address}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      加入时间: {new Date(member.created_at).toLocaleString('zh-CN')}
-                    </p>
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={() => window.location.href = 'https://eagleswap.llc/swap'}
+                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
+              >
+                立即跳转
+              </button>
             </div>
           )}
         </div>
