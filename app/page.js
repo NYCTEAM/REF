@@ -155,10 +155,10 @@ export default function Home() {
         }
         setTeamMembers(data.teamMembers || []);
         setTeammates(data.teammates || []); 
-        showMessage('验证成功，正在跳转...', 'success');
-        setTimeout(() => {
-          window.location.href = 'https://eagleswap.llc/swap';
-        }, 1500);
+        showMessage('验证成功', 'success');
+        // setTimeout(() => {
+        //   window.location.href = 'https://eagleswap.llc/swap';
+        // }, 1500);
       }
     } catch (error) {
       console.error('检查用户状态失败:', error);
@@ -259,11 +259,11 @@ export default function Home() {
       if (data.success) {
         setIsBound(true);
         setTeamName(data.data.teamName);
-        showMessage('加入成功，正在跳转...', 'success');
+        showMessage('加入成功', 'success');
         
-        setTimeout(() => {
-          window.location.href = 'https://eagleswap.llc/swap';
-        }, 1500);
+        // setTimeout(() => {
+        //   window.location.href = 'https://eagleswap.llc/swap';
+        // }, 1500);
         
         setTimeout(() => checkUserStatus(), 500);
       } else if (data.alreadyBound) {
@@ -369,42 +369,44 @@ export default function Home() {
           )}
 
           {/* 钱包连接 */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <Wallet className="w-6 h-6" />
-              连接钱包
-            </h2>
-            
-            {!isConnected ? (
-              <button
-                onClick={connectWallet}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? '连接中...' : '连接钱包'}
-              </button>
-            ) : (
-              <div className="space-y-3">
-                <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200">
-                  <p className="text-sm text-gray-600 mb-2">已连接钱包:</p>
-                  <p className="font-mono text-sm text-gray-800 break-all">{walletAddress}</p>
-                </div>
+          {!isBound && (
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <Wallet className="w-6 h-6" />
+                连接钱包
+              </h2>
+              
+              {!isConnected ? (
                 <button
-                  onClick={() => {
-                    setWalletAddress('');
-                    setIsConnected(false);
-                    setIsBound(false);
-                    setTeamName('');
-                    setTeamMembers([]);
-                    showMessage('已断开连接', 'success');
-                  }}
-                  className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-all"
+                  onClick={connectWallet}
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  断开连接
+                  {loading ? '连接中...' : '连接钱包'}
                 </button>
-              </div>
-            )}
-          </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200">
+                    <p className="text-sm text-gray-600 mb-2">已连接钱包:</p>
+                    <p className="font-mono text-sm text-gray-800 break-all">{walletAddress}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setWalletAddress('');
+                      setIsConnected(false);
+                      setIsBound(false);
+                      setTeamName('');
+                      setTeamMembers([]);
+                      showMessage('已断开连接', 'success');
+                    }}
+                    className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-300 transition-all"
+                  >
+                    断开连接
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 绑定按钮 */}
           {isConnected && !isBound && (
@@ -419,20 +421,89 @@ export default function Home() {
             </div>
           )}
 
-          {/* 已绑定 - 直接显示跳转提示 */}
+          {/* 已绑定 - 显示推荐详情 */}
           {isBound && (
-            <div className="text-center py-12">
-              <div className="mb-6">
+            <div className="space-y-8">
+              <div className="text-center p-6 bg-green-50 rounded-2xl border border-green-100">
                 <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">验证成功</h2>
-                <p className="text-gray-600">正在跳转...</p>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">已成功绑定</h2>
+                <p className="text-gray-600">您已成为 Eagle Swap 社区的一员</p>
               </div>
-              <button
-                onClick={() => window.location.href = 'https://eagleswap.llc/swap'}
-                className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg"
-              >
-                立即前往
-              </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 推荐人信息 */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Shield className="w-6 h-6 text-blue-500" />
+                    <h3 className="text-lg font-semibold text-gray-800">您的推荐人</h3>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded-lg break-all font-mono text-sm text-gray-600">
+                    {referrerName || referrerAddress || '无推荐人'}
+                  </div>
+                </div>
+
+                {/* 推荐统计 */}
+                <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <Users className="w-6 h-6 text-indigo-500" />
+                    <h3 className="text-lg font-semibold text-gray-800">您的推荐</h3>
+                  </div>
+                  <div className="text-3xl font-bold text-gray-800">
+                    {teamMembers.length} <span className="text-base font-normal text-gray-500">人</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 您的钱包 */}
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <Wallet className="w-6 h-6 text-purple-500" />
+                  <h3 className="text-lg font-semibold text-gray-800">您的钱包地址</h3>
+                </div>
+                <div className="flex items-center justify-between gap-4 p-3 bg-gray-50 rounded-lg">
+                  <code className="text-sm text-gray-600 break-all font-mono">{walletAddress}</code>
+                  <button 
+                    onClick={() => copyAddress(walletAddress)}
+                    className="p-2 hover:bg-gray-200 rounded-lg transition-colors text-gray-500"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 推广链接 */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+                <div className="flex items-center gap-3 mb-4">
+                  <LinkIcon className="w-6 h-6 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-gray-800">您的专属推广链接</h3>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    readOnly
+                    value={`${typeof window !== 'undefined' ? window.location.origin : ''}?ref=${walletAddress}`}
+                    className="flex-1 px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-600 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={copyReferralLink}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md whitespace-nowrap"
+                  >
+                    复制链接
+                  </button>
+                </div>
+              </div>
+
+              {/* 购买 NFT 链接 */}
+              <div className="text-center pt-4">
+                <a
+                  href="https://eagleswap.llc/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  前往购买 NFT
+                  <LinkIcon className="w-5 h-5" />
+                </a>
+              </div>
             </div>
           )}
         </div>
