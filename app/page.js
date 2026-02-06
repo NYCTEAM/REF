@@ -513,22 +513,27 @@ export default function Home() {
                 </div>
                 <div className="space-y-4 text-sm text-gray-700">
                   <div className="flex gap-3">
-                    <span className="font-bold text-blue-600 min-w-[20px]">1.</span>
+                    <span className="font-bold text-red-600 min-w-[20px]">1.</span>
+                    <p className="font-bold text-red-600">推荐人地址必须持有NFT 才能获取奖励。 任何等级NFT 。</p>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">2.</span>
                     <p><span className="font-bold">基础奖励：</span>通过您推荐的地址购买 NFT，您将获得购买金额 <span className="font-bold text-orange-600">10%</span> 的返还。</p>
                   </div>
                   
                   <div className="flex gap-3">
-                    <span className="font-bold text-blue-600 min-w-[20px]">2.</span>
+                    <span className="font-bold text-blue-600 min-w-[20px]">3.</span>
                     <p><span className="font-bold">唯一性限制：</span>每个 Token ID 对应的奖励只能领取一次，不可重复。</p>
                   </div>
                   
                   <div className="flex gap-3">
-                    <span className="font-bold text-blue-600 min-w-[20px]">3.</span>
+                    <span className="font-bold text-blue-600 min-w-[20px]">4.</span>
                     <p><span className="font-bold">领取方式：</span>请加入 QQ 群：<span className="select-all font-mono bg-white px-1 rounded border">203765559</span> 或联系电报：<a href="https://t.me/EagleSwapLLC" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://t.me/EagleSwapLLC</a>，发送您的钱包地址。我们会核实后为您返还 10%。</p>
                   </div>
                   
                   <div className="flex gap-3">
-                    <span className="font-bold text-blue-600 min-w-[20px]">4.</span>
+                    <span className="font-bold text-blue-600 min-w-[20px]">5.</span>
                     <div>
                       <p className="mb-1"><span className="font-bold">累计额外奖励：</span>每累计销售金额达到 <span className="font-bold text-green-600">$2000</span>，额外奖励 <span className="font-bold text-green-600">$100 USDT</span>。</p>
                       <ul className="list-disc pl-4 space-y-1 text-gray-600 text-xs">
@@ -540,7 +545,7 @@ export default function Home() {
                   </div>
                   
                   <div className="flex gap-3">
-                    <span className="font-bold text-blue-600 min-w-[20px]">5.</span>
+                    <span className="font-bold text-blue-600 min-w-[20px]">6.</span>
                     <div>
                       <p className="mb-1"><span className="font-bold">反作弊机制：</span></p>
                       <ul className="list-disc pl-4 space-y-1 text-gray-600 text-xs">
