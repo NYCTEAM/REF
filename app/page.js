@@ -268,8 +268,10 @@ export default function Home() {
         setTimeout(() => checkUserStatus(), 500);
       } else if (data.alreadyBound) {
         setIsBound(true);
-        setTeamName(data.user?.team_name || finalTeamName);
-        showMessage('该钱包已在列表中', 'error');
+        // setTeamName(data.user?.team_name || finalTeamName);
+        showMessage('绑定失败：该钱包已绑定过推荐关系。每个钱包只能绑定一个社区/推荐人，不可重复或跨社区绑定。', 'error');
+        // 立即刷新状态以显示正确的已绑定信息
+        setTimeout(() => checkUserStatus(), 500);
       } else {
         console.error('Bind failed:', data.message);
         showMessage('加入失败，请重试', 'error');
