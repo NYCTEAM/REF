@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy } from 'lucide-react';
+import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Home() {
@@ -503,6 +503,53 @@ export default function Home() {
                   前往购买 NFT
                   <LinkIcon className="w-5 h-5" />
                 </a>
+              </div>
+
+              {/* 推荐规则说明 */}
+              <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 mt-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Info className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-bold text-gray-800">推荐规则说明</h3>
+                </div>
+                <div className="space-y-4 text-sm text-gray-700">
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">1.</span>
+                    <p><span className="font-bold">基础奖励：</span>通过您推荐的地址购买 NFT，您将获得购买金额 <span className="font-bold text-orange-600">10%</span> 的返还。</p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">2.</span>
+                    <p><span className="font-bold">唯一性限制：</span>每个 Token ID 对应的奖励只能领取一次，不可重复。</p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">3.</span>
+                    <p><span className="font-bold">领取方式：</span>请加入 QQ 群：<span className="select-all font-mono bg-white px-1 rounded border">203765559</span> 或联系电报：<a href="https://t.me/EagleSwapLLC" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">https://t.me/EagleSwapLLC</a>，发送您的钱包地址。我们会核实后为您返还 10%。</p>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">4.</span>
+                    <div>
+                      <p className="mb-1"><span className="font-bold">累计额外奖励：</span>每累计销售金额达到 <span className="font-bold text-green-600">$2000</span>，额外奖励 <span className="font-bold text-green-600">$100 USDT</span>。</p>
+                      <ul className="list-disc pl-4 space-y-1 text-gray-600 text-xs">
+                        <li>领取后累计金额重置。</li>
+                        <li>若未达到 $2000，仅能领取 10% 直推奖励。</li>
+                        <li><span className="font-semibold text-blue-600">综合回报：</span>累计达到$2000时，总奖励 = $200 (10%基础) + $100 (额外) = <span className="font-bold">$300 (即 15% 奖励)</span>。</li>
+                      </ul>
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <span className="font-bold text-blue-600 min-w-[20px]">5.</span>
+                    <div>
+                      <p className="mb-1"><span className="font-bold">反作弊机制：</span></p>
+                      <ul className="list-disc pl-4 space-y-1 text-gray-600 text-xs">
+                        <li>对应 Token ID 只能结算一次。</li>
+                        <li>若购买后 NFT 被转移，以 <span className="font-bold text-red-500">第一次购买 NFT 的地址</span> 为准进行推荐关系结算，防止作弊和混乱。</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
