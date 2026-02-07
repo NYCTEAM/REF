@@ -24,6 +24,7 @@ function HomeContent() {
   const [isConnected, setIsConnected] = useState(false);
   const [isBound, setIsBound] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true); // 默认为 true，直到首次检查完成
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); 
   const [teamMembers, setTeamMembers] = useState([]); 
