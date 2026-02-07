@@ -453,6 +453,25 @@ export default function Home() {
                   <div className="text-3xl font-bold text-gray-800">
                     {teamMembers.length} <span className="text-base font-normal text-gray-500">人</span>
                   </div>
+                  
+                  {/* 推荐列表 */}
+                  {teamMembers.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <p className="text-sm text-gray-500 mb-2 font-medium">推荐名单:</p>
+                      <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+                        {teamMembers.map((member, index) => (
+                          <div key={member.id || index} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
+                            <span className="font-mono text-gray-600 truncate max-w-[180px]">
+                              {member.wallet_address}
+                            </span>
+                            <span className="text-gray-400">
+                              {new Date(member.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
