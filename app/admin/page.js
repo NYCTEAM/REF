@@ -95,7 +95,8 @@ export default function AdminPage() {
       
       const NFT_CONTRACT_ADDRESS = '0x3c117d186C5055071EfF91d87f2600eaF88D591D';
       const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/';
-      const NFT_PRICE = 100;
+      const START_BLOCK = 79785738; // NFT 合约部署区块
+      const BLOCK_BATCH_SIZE = 5000; // 每次查询 5000 个区块，避免超限
       
       // 获取所有用户
       const statsRes = await fetch('/api/stats');
@@ -114,6 +115,11 @@ export default function AdminPage() {
       const transferTopic = ethers.id("Transfer(address,address,uint256)");
       const zeroAddressTopic = ethers.zeroPadValue(ethers.ZeroAddress, 32);
       
+      // 获取 NFT 等级配置
+      const tiersRes = await fetch('/api/nft-tiers');
+      const tiersData = await tiersRes.json();
+      const tiers = tiersData.tiers || [];
+      
       let successCount = 0;
       let failCount = 0;
       
@@ -123,17 +129,63 @@ export default function AdminPage() {
         setSyncProgress({ current: i + 1, total: allUsers.length });
         
         try {
-          const userTopic = ethers.zeroPadValue(user.wallet_address, 32);
-          const filter = {
-            address: NFT_CONTRACT_ADDRESS,
-            topics: [transferTopic, zeroAddressTopic, userTopic],
-            fromBlock: 0,
-            toBlock: 'latest'
-          };
+          // 获取用户的同步进度
+          const progressRes = await fetch(`/api/sync-progress?address=${user.wallet_address}`);
+          const progressData = await progressRes.json();
+          const lastSyncedBlock = progressData.progress?.last_synced_block || START_BLOCK;
           
-          const logs = await provider.getLogs(filter);
-          const nftCount = logs.length;
-          const mintAmount = nftCount * NFT_PRICE;
+          // 获取最新区块
+          const latestBlock = await provider.getBlockNumber();
+          
+          const userTopic = ethers.zeroPadValue(user.wallet_address, 32);
+          let allLogs = [];
+          
+          // 分批查询，从上次同步的区块开始
+          for (let fromBlock = lastSyncedBlock; fromBlock <= latestBlock; fromBlock += BLOCK_BATCH_SIZE) {
+            const toBlock = Math.min(fromBlock + BLOCK_BATCH_SIZE - 1, latestBlock);
+            
+            const filter = {
+              address: NFT_CONTRACT_ADDRESS,
+              topics: [transferTopic, zeroAddressTopic, userTopic],
+              fromBlock: fromBlock,
+              toBlock: toBlock
+            };
+            
+            try {
+              const logs = await provider.getLogs(filter);
+              allLogs = allLogs.concat(logs);
+              
+              // 每批次之间延迟，避免速率限制
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (batchError) {
+              console.error(`查询区块 ${fromBlock}-${toBlock} 失败:`, batchError);
+              // 继续下一批次
+            }
+          }
+          
+          // 解析 NFT 并匹配等级
+          const nfts = [];
+          let totalValue = 0;
+          
+          for (const log of allLogs) {
+            const tokenId = parseInt(log.topics[3], 16);
+            
+            // 根据 Token ID 查找等级
+            const tier = tiers.find(t => 
+              tokenId >= t.token_id_start && tokenId <= t.token_id_end
+            );
+            
+            if (tier) {
+              nfts.push({
+                tokenId,
+                tierId: tier.id,
+                price: tier.price,
+                txHash: log.transactionHash,
+                blockNumber: log.blockNumber
+              });
+              totalValue += tier.price;
+            }
+          }
           
           // 同步到数据库
           const syncRes = await fetch('/api/user/sync-nft', {
@@ -141,19 +193,31 @@ export default function AdminPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               walletAddress: user.wallet_address,
-              nftCount: nftCount,
-              mintAmount: mintAmount
+              nftCount: nfts.length,
+              mintAmount: totalValue,
+              nfts: nfts
             })
           });
           
           if (syncRes.ok) {
+            // 更新同步进度
+            await fetch('/api/sync-progress', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                address: user.wallet_address,
+                lastBlock: latestBlock,
+                nftCount: nfts.length,
+                status: 'completed'
+              })
+            });
             successCount++;
           } else {
             failCount++;
           }
           
           // 避免请求过快
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 300));
           
         } catch (err) {
           console.error(`同步 ${user.wallet_address} 失败:`, err);
@@ -609,9 +673,11 @@ export default function AdminPage() {
               说明
             </h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• 自动扫描所有用户的 NFT MINT 事件（从区块链 0 开始）</li>
+              <li>• 自动扫描所有用户的 NFT MINT 事件（从区块 79785738 开始）</li>
+              <li>• 分批查询（每批 5000 区块），避免 RPC 速率限制</li>
+              <li>• 根据 Token ID 自动匹配 NFT 等级（7个等级：10/25/50/100/250/500/1000 USDT）</li>
+              <li>• 支持断点续传：保存同步进度，下次从上次位置继续</li>
               <li>• 只统计 MINT 事件（Transfer from 0x0），不统计二次转账</li>
-              <li>• 同步结果会自动保存到数据库的 nft_count 和 nft_mint_amount 字段</li>
               <li>• 建议定期执行同步以保持数据最新</li>
             </ul>
           </div>
