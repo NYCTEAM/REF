@@ -94,9 +94,10 @@ export default function AdminPage() {
       const { ethers } = await import('ethers');
       
       const NFT_CONTRACT_ADDRESS = '0x3c117d186C5055071EfF91d87f2600eaF88D591D';
-      const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/';
+      const EAGLE_BSC_RPC_HK = 'https://bsc.eagleswap.llc';
+      const EAGLE_HK_API_KEY = '26119c762d57f906602c2d4bed374e05bab696dccdd2c8708cfacd4303f71c5f';
       const START_BLOCK = 79785738; // NFT 合约部署区块
-      const BLOCK_BATCH_SIZE = 5000; // 每次查询 5000 个区块，避免超限
+      const BLOCK_BATCH_SIZE = 2000; // 每次查询 2000 个区块，避免超限
       
       // 获取所有用户
       const statsRes = await fetch('/api/stats');
@@ -111,7 +112,11 @@ export default function AdminPage() {
       
       setSyncProgress({ current: 0, total: allUsers.length });
       
-      const provider = new ethers.JsonRpcProvider(CUSTOM_RPC);
+      // 使用 Eagle Swap 的 RPC 节点，带 API key
+      const fetchRequest = new ethers.FetchRequest(EAGLE_BSC_RPC_HK);
+      fetchRequest.setHeader('X-API-Key', EAGLE_HK_API_KEY);
+      const provider = new ethers.JsonRpcProvider(fetchRequest);
+      
       const transferTopic = ethers.id("Transfer(address,address,uint256)");
       const zeroAddressTopic = ethers.zeroPadValue(ethers.ZeroAddress, 32);
       
@@ -156,7 +161,7 @@ export default function AdminPage() {
               allLogs = allLogs.concat(logs);
               
               // 每批次之间延迟，避免速率限制
-              await new Promise(resolve => setTimeout(resolve, 200));
+              await new Promise(resolve => setTimeout(resolve, 500));
             } catch (batchError) {
               console.error(`查询区块 ${fromBlock}-${toBlock} 失败:`, batchError);
               // 继续下一批次
@@ -216,8 +221,8 @@ export default function AdminPage() {
             failCount++;
           }
           
-          // 避免请求过快
-          await new Promise(resolve => setTimeout(resolve, 300));
+          // 避免用户之间请求过快
+          await new Promise(resolve => setTimeout(resolve, 500));
           
         } catch (err) {
           console.error(`同步 ${user.wallet_address} 失败:`, err);
@@ -674,7 +679,7 @@ export default function AdminPage() {
             </h3>
             <ul className="text-sm text-gray-600 space-y-1">
               <li>• 自动扫描所有用户的 NFT MINT 事件（从区块 79785738 开始）</li>
-              <li>• 分批查询（每批 5000 区块），避免 RPC 速率限制</li>
+              <li>• 分批查询（每批 2000 区块，延迟 500ms），避免 RPC 速率限制</li>
               <li>• 根据 Token ID 自动匹配 NFT 等级（7个等级：10/25/50/100/250/500/1000 USDT）</li>
               <li>• 支持断点续传：保存同步进度，下次从上次位置继续</li>
               <li>• 只统计 MINT 事件（Transfer from 0x0），不统计二次转账</li>
