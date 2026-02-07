@@ -713,11 +713,11 @@ function HomeContent() {
                           <div key={member.id || index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg text-xs hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200">
                             <div className="flex flex-col gap-1">
                               <a 
-                                href={`https://etherscan.io/address/${member.wallet_address}`}
+                                href={`https://bscscan.com/token/${NFT_CONTRACT_ADDRESS}?a=${member.wallet_address}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="font-mono text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 font-medium"
-                                title="在浏览器查看"
+                                title="在 BSCScan 查看 NFT 持有情况"
                               >
                                 {member.wallet_address.substring(0, 8)}...{member.wallet_address.substring(member.wallet_address.length - 6)}
                                 <LinkIcon className="w-3 h-3" />
