@@ -11,7 +11,7 @@ const NFT_ABI = [
   "function balanceOf(address owner) view returns (uint256)"
 ];
 
-const CUSTOM_RPC = 'https://bsc.eagleswap.llc/';
+const CUSTOM_RPC = 'https://bsc.eagleswap.io';
 const NFT_PRICE = 100; // 假设每个 NFT 价值 100 USDT (用于计算业绩)
 
 function HomeContent() {
