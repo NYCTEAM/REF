@@ -167,8 +167,33 @@ function HomeContent() {
     if (walletAddress) {
       checkUserStatus();
       fetchMyNFTBalance(); // 检查自己的 NFT 余额
+      
+      // 🔥 自动刷新 NFT 数据（如果需要）
+      autoRefreshNFTData();
     }
   }, [walletAddress]);
+  
+  // 自动刷新 NFT 数据
+  const autoRefreshNFTData = async () => {
+    try {
+      // 静默刷新，不显示加载状态
+      const res = await fetch('/api/user/refresh-nft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress })
+      });
+      const data = await res.json();
+      if (data.success) {
+        console.log(`✅ NFT 数据已自动刷新: ${data.data.nftCount} 个 NFT`);
+        // 重新加载用户状态
+        await checkUserStatus();
+        await fetchMyNFTBalance();
+      }
+    } catch (error) {
+      console.error('自动刷新 NFT 失败:', error);
+      // 静默失败，不打扰用户
+    }
+  };
 
   useEffect(() => {
     if (teamMembers.length > 0) {
@@ -654,8 +679,44 @@ function HomeContent() {
                   <h3 className="text-xl font-bold flex items-center gap-2">
                     <Coins className="w-6 h-6" /> 直推佣金统计
                   </h3>
-                  <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
-                    当前奖励比例: {(commissionStats.currentRate * 100).toFixed(0)}%
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        try {
+                          setLoading(true);
+                          const res = await fetch('/api/user/refresh-nft', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ walletAddress, force: true }) // 强制刷新
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            if (data.data.skipped) {
+                              showMessage('数据已是最新', 'success');
+                            } else {
+                              showMessage(`NFT 数据已刷新: ${data.data.nftCount} 个 NFT`, 'success');
+                            }
+                            // 重新加载用户状态
+                            await checkUserStatus();
+                            await fetchMyNFTBalance();
+                          } else {
+                            showMessage('刷新失败: ' + data.message, 'error');
+                          }
+                        } catch (error) {
+                          showMessage('刷新失败', 'error');
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading}
+                      className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm transition-colors disabled:opacity-50"
+                      title="刷新我的 NFT 数据"
+                    >
+                      🔄 刷新
+                    </button>
+                    <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
+                      当前奖励比例: {(commissionStats.currentRate * 100).toFixed(0)}%
+                    </div>
                   </div>
                 </div>
                 
