@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy, Info, Loader2, Coins } from 'lucide-react';
+import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy, Info, Loader2, Coins, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { ethers } from 'ethers';
 
