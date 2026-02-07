@@ -27,9 +27,24 @@ async function scanUserNFTs(walletAddress) {
     const tiers = db.getNFTTiers();
     const latestBlock = await provider.getBlockNumber();
     
+    // 🔥 获取上次同步的区块，实现增量扫描
+    const syncProgress = db.getSyncProgress(walletAddress);
+    const startBlock = syncProgress && syncProgress.last_block ? syncProgress.last_block + 1 : START_BLOCK;
+    
+    console.log(`📊 刷新扫描: 最新区块 ${latestBlock}, 起始区块 ${startBlock}${syncProgress ? ' (增量)' : ' (首次)'}`);
+    
+    // 如果已经是最新的，跳过扫描
+    if (startBlock > latestBlock) {
+      console.log(`✅ ${walletAddress} 已是最新数据`);
+      const allUserNFTs = db.getUserNFTs(walletAddress);
+      const totalNFTCount = allUserNFTs.length;
+      const totalNFTValue = allUserNFTs.reduce((sum, nft) => sum + nft.price, 0);
+      return { success: true, nftCount: totalNFTCount, totalValue: totalNFTValue };
+    }
+    
     let allLogs = [];
     
-    for (let fromBlock = START_BLOCK; fromBlock <= latestBlock; fromBlock += BLOCK_BATCH_SIZE) {
+    for (let fromBlock = startBlock; fromBlock <= latestBlock; fromBlock += BLOCK_BATCH_SIZE) {
       const toBlock = Math.min(fromBlock + BLOCK_BATCH_SIZE - 1, latestBlock);
       
       const filter = {
@@ -69,11 +84,10 @@ async function scanUserNFTs(walletAddress) {
       }
     }
     
-    // 清除旧数据
-    db.clearUserNFTs(walletAddress);
-    
+    // 🔥 增量保存到数据库（不删除旧数据）
     if (nfts.length > 0) {
-      // 保存新数据
+      console.log(`📝 发现 ${nfts.length} 个新 NFT，保存到数据库...`);
+      
       for (const nft of nfts) {
         db.saveUserNFT(
           walletAddress,
@@ -85,14 +99,21 @@ async function scanUserNFTs(walletAddress) {
         );
       }
       
-      console.log(`✅ ${walletAddress} NFT 刷新完成: ${nfts.length} 个 NFT, 总价值 ${totalValue} USDT`);
+      console.log(`✅ ${walletAddress} 新增 ${nfts.length} 个 NFT, 价值 ${totalValue} USDT`);
     } else {
-      console.log(`ℹ️ ${walletAddress} 没有持有 NFT`);
+      console.log(`ℹ️ ${walletAddress} 本次扫描没有新 NFT`);
     }
     
-    // 🔥 无论是否有 NFT，都要更新统计和同步进度
-    db.updateUserNftStats(walletAddress, nfts.length, totalValue);
-    db.updateSyncProgress(walletAddress, latestBlock, nfts.length, 'completed');
+    // 🔥 重新计算用户的总 NFT 数量和价值
+    const allUserNFTs = db.getUserNFTs(walletAddress);
+    const totalNFTCount = allUserNFTs.length;
+    const totalNFTValue = allUserNFTs.reduce((sum, nft) => sum + nft.price, 0);
+    
+    // 更新用户统计和同步进度
+    db.updateUserNftStats(walletAddress, totalNFTCount, totalNFTValue);
+    db.updateSyncProgress(walletAddress, latestBlock, totalNFTCount, 'completed');
+    
+    console.log(`📊 ${walletAddress} 总计: ${totalNFTCount} 个 NFT, 总价值 ${totalNFTValue} USDT`);
     
     return { success: true, nftCount: nfts.length, totalValue };
     
