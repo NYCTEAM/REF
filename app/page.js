@@ -173,20 +173,25 @@ function HomeContent() {
   }, [walletAddress]);
   
   // 自动刷新 NFT 数据
-  const autoRefreshNFTData = async () => {
+  const autoRefreshNFTData = async (forceRefresh = false) => {
     try {
       // 静默刷新，不显示加载状态
       const res = await fetch('/api/user/refresh-nft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ walletAddress })
+        body: JSON.stringify({ 
+          walletAddress,
+          force: forceRefresh // 强制刷新，忽略缓存
+        })
       });
       const data = await res.json();
       if (data.success) {
-        console.log(`✅ NFT 数据已自动刷新: ${data.data.nftCount} 个 NFT`);
-        // 重新加载用户状态
-        await checkUserStatus();
-        await fetchMyNFTBalance();
+        if (!data.data.skipped) {
+          console.log(`✅ NFT 数据已自动刷新: ${data.data.nftCount} 个 NFT`);
+          // 重新加载用户状态
+          await checkUserStatus();
+          await fetchMyNFTBalance();
+        }
       }
     } catch (error) {
       console.error('自动刷新 NFT 失败:', error);
@@ -289,6 +294,12 @@ function HomeContent() {
         }
         setTeamMembers(data.teamMembers || []);
         setTeammates(data.teammates || []); 
+        
+        // 🔥 如果用户的 NFT 数据是 null（从未扫描过），强制刷新
+        if (data.user.nft_count === null || data.user.nft_count === undefined) {
+          console.log('⚠️ 用户 NFT 数据为空，强制刷新...');
+          autoRefreshNFTData(true); // 强制刷新
+        }
         // showMessage('验证成功', 'success'); // 减少打扰
       }
     } catch (error) {
