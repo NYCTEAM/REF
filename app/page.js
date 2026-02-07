@@ -460,10 +460,17 @@ export default function Home() {
                       <p className="text-sm text-gray-500 mb-2 font-medium">推荐名单:</p>
                       <div className="max-h-40 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                         {teamMembers.map((member, index) => (
-                          <div key={member.id || index} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs">
-                            <span className="font-mono text-gray-600 truncate max-w-[180px]">
-                              {member.wallet_address}
-                            </span>
+                          <div key={member.id || index} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs hover:bg-gray-100 transition-colors">
+                            <a 
+                              href={`https://etherscan.io/address/${member.wallet_address}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
+                              title="在浏览器查看"
+                            >
+                              {member.wallet_address.substring(0, 8)}...{member.wallet_address.substring(member.wallet_address.length - 6)}
+                              <LinkIcon className="w-3 h-3" />
+                            </a>
                             <span className="text-gray-400">
                               {new Date(member.created_at).toLocaleDateString()}
                             </span>
