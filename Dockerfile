@@ -32,12 +32,18 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# 🔥 创建数据目录并设置权限
+RUN mkdir -p /data && chown -R nextjs:nodejs /data
+
 # 复制构建产物
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
+
+# 🔥 声明数据卷
+VOLUME ["/data"]
 
 EXPOSE 3004
 

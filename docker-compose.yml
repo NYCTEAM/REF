@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  referral-system:
+    build: .
+    ports:
+      - "3004:3004"
+    volumes:
+      # 🔥 持久化数据库存储
+      - referral-data:/data
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data
+    restart: unless-stopped
+
+volumes:
+  # 🔥 创建持久化卷，数据不会在重新部署时丢失
+  referral-data:
+    driver: local
