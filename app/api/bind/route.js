@@ -30,6 +30,7 @@ async function scanUserNFTs(walletAddress) {
     
     // 获取最新区块
     const latestBlock = await provider.getBlockNumber();
+    console.log(`📊 当前最新区块: ${latestBlock}, 起始区块: ${START_BLOCK}`);
     
     let allLogs = [];
     
@@ -46,14 +47,19 @@ async function scanUserNFTs(walletAddress) {
       
       try {
         const logs = await provider.getLogs(filter);
+        if (logs.length > 0) {
+          console.log(`✅ 区块 ${fromBlock}-${toBlock}: 找到 ${logs.length} 个 MINT 事件`);
+        }
         allLogs = allLogs.concat(logs);
         
         // 延迟避免速率限制
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (batchError) {
-        console.error(`查询区块 ${fromBlock}-${toBlock} 失败:`, batchError);
+        console.error(`❌ 查询区块 ${fromBlock}-${toBlock} 失败:`, batchError);
       }
     }
+    
+    console.log(`📝 总共找到 ${allLogs.length} 个 MINT 事件`);
     
     // 解析 NFT 并匹配等级
     const nfts = [];
