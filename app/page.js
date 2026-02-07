@@ -46,7 +46,111 @@ function HomeContent() {
   });
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
-  // ... (useEffect for teams and wallet connection remain same)
+  // 从API加载团队列表
+  const fetchTeams = async () => {
+    try {
+      const res = await fetch('/api/teams');
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setAvailableTeams(data);
+      }
+    } catch (error) {
+      console.error('获取列表失败:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
+  useEffect(() => {
+    const ref = searchParams.get('ref');
+    if (ref) {
+      setReferrerAddress(ref);
+      
+      const fetchTeamInfo = async () => {
+        try {
+          const res = await fetch(`/api/team-info?address=${ref}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.team) {
+              setReferrerName(data.team.name);
+              setInvitingTeamName(data.team.name);
+            }
+          }
+        } catch (error) {
+          console.error('获取信息失败:', error);
+        }
+      };
+      
+      fetchTeamInfo();
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      if (typeof window.ethereum !== 'undefined') {
+        try {
+          const accounts = await window.ethereum.request({ 
+            method: 'eth_accounts' 
+          });
+          
+          if (accounts.length > 0) {
+            console.log('检测到已连接的钱包:', accounts[0]);
+            setWalletAddress(accounts[0]);
+            setIsConnected(true);
+          } else {
+            console.log('未检测到已连接的钱包');
+          }
+        } catch (error) {
+          console.error('检查钱包连接失败:', error);
+        }
+      }
+    };
+
+    checkWalletConnection();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window.ethereum !== 'undefined') {
+      const handleAccountsChanged = (accounts) => {
+        console.log('账户已切换:', accounts);
+        if (accounts.length === 0) {
+          setWalletAddress('');
+          setIsConnected(false);
+          setIsBound(false);
+          setTeamName('');
+          setTeamMembers([]);
+          showMessage('钱包已断开连接', 'error');
+        } else {
+          const newAddress = accounts[0];
+          console.log('新账户地址:', newAddress);
+          setWalletAddress(newAddress);
+          setIsConnected(true);
+          setIsBound(false);
+          setTeamName('');
+          setTeamMembers([]);
+          showMessage('已切换到新钱包', 'success');
+        }
+      };
+
+      const handleChainChanged = () => {
+        console.log('链已切换，刷新页面');
+        window.location.reload();
+      };
+
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        if (window.ethereum.removeListener) {
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+          window.ethereum.removeListener('chainChanged', handleChainChanged);
+        }
+      };
+    }
+  }, []);
 
   useEffect(() => {
     if (walletAddress) {
@@ -85,6 +189,18 @@ function HomeContent() {
       });
     }
   }, [memberNFTs, claimedAmount]);
+
+  const fetchMyNFTBalance = async () => {
+    if (!walletAddress) return;
+    try {
+      const provider = new ethers.JsonRpcProvider(CUSTOM_RPC);
+      const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+      const balance = await contract.balanceOf(walletAddress);
+      setMyNFTBalance(Number(balance));
+    } catch (error) {
+      console.error('Check my NFT failed:', error);
+    }
+  };
 
   const fetchMemberNFTs = async () => {
     try {
