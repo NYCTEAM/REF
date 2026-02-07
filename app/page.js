@@ -50,6 +50,20 @@ function HomeContent() {
     available: 0
   });
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [referrerRanking, setReferrerRanking] = useState([]); // 推荐人排行榜
+
+  // 🔥 获取推荐人排行榜
+  const fetchReferrerRanking = async () => {
+    try {
+      const res = await fetch('/api/referrer-ranking');
+      const data = await res.json();
+      if (data.success) {
+        setReferrerRanking(data.data || []);
+      }
+    } catch (error) {
+      console.error('获取推荐人排行榜失败:', error);
+    }
+  };
 
   // 从API加载团队列表
   const fetchTeams = async () => {
@@ -67,6 +81,7 @@ function HomeContent() {
 
   useEffect(() => {
     fetchTeams();
+    fetchReferrerRanking(); // 获取推荐人排行榜
   }, []);
 
   useEffect(() => {
@@ -224,6 +239,37 @@ function HomeContent() {
     }
   }, [teamMembers]);
 
+  // 🔥 分阶段计算佣金
+  // 业绩 0-2000 USDT: 10%
+  // 业绩 2001-10000 USDT: 15%
+  // 业绩 10001+ USDT: 20%
+  const calculateTieredCommission = (totalPerformance) => {
+    let commission = 0;
+    
+    if (totalPerformance <= 0) {
+      return 0;
+    }
+    
+    // 第一阶段: 0-2000 USDT @ 10%
+    if (totalPerformance <= 2000) {
+      commission = totalPerformance * 0.10;
+    } else {
+      commission = 2000 * 0.10; // 前 2000 的佣金 = 200
+      
+      // 第二阶段: 2001-10000 USDT @ 15%
+      if (totalPerformance <= 10000) {
+        commission += (totalPerformance - 2000) * 0.15;
+      } else {
+        commission += 8000 * 0.15; // 2001-10000 的佣金 = 1200
+        
+        // 第三阶段: 10001+ USDT @ 20%
+        commission += (totalPerformance - 10000) * 0.20;
+      }
+    }
+    
+    return commission;
+  };
+
   // 计算佣金统计
   useEffect(() => {
     if (teamMembers.length > 0) {
@@ -234,16 +280,18 @@ function HomeContent() {
         totalPerformance += member.nft_mint_amount || 0;
       });
 
-      let rate = 0.10;
-      if (totalPerformance >= 10000) rate = 0.20;
-      else if (totalPerformance >= 2000) rate = 0.15;
-
-      const totalCommission = totalPerformance * rate;
+      // 🔥 使用分阶段计算佣金
+      const totalCommission = calculateTieredCommission(totalPerformance);
       const available = Math.max(0, totalCommission - claimedAmount);
+      
+      // 当前档位比例（用于显示）
+      let currentRate = 0.10;
+      if (totalPerformance >= 10000) currentRate = 0.20;
+      else if (totalPerformance >= 2000) currentRate = 0.15;
 
       setCommissionStats({
         totalPerformance,
-        currentRate: rate,
+        currentRate,
         totalCommission,
         available
       });
@@ -773,6 +821,83 @@ function HomeContent() {
                 </button>
               </div>
 
+              {/* 🔥 佣金等级进度条 */}
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <span className="text-2xl">📊</span> 佣金等级进度
+                </h3>
+                
+                {(() => {
+                  const performance = commissionStats.totalPerformance;
+                  let currentTier, nextTier, progress, remaining;
+                  
+                  if (performance < 2000) {
+                    currentTier = { name: '初级', rate: '10%', color: 'bg-blue-500' };
+                    nextTier = { name: '中级', rate: '15%', threshold: 2000 };
+                    progress = (performance / 2000) * 100;
+                    remaining = 2000 - performance;
+                  } else if (performance < 10000) {
+                    currentTier = { name: '中级', rate: '15%', color: 'bg-purple-500' };
+                    nextTier = { name: '高级', rate: '20%', threshold: 10000 };
+                    progress = ((performance - 2000) / 8000) * 100;
+                    remaining = 10000 - performance;
+                  } else {
+                    currentTier = { name: '高级', rate: '20%', color: 'bg-yellow-500' };
+                    nextTier = null;
+                    progress = 100;
+                    remaining = 0;
+                  }
+                  
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-white text-sm font-bold ${currentTier.color}`}>
+                            {currentTier.name} {currentTier.rate}
+                          </span>
+                          {nextTier && (
+                            <>
+                              <span className="text-gray-400">→</span>
+                              <span className="px-3 py-1 rounded-full bg-gray-200 text-gray-600 text-sm font-bold">
+                                {nextTier.name} {nextTier.rate}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                        {nextTier && (
+                          <span className="text-sm text-gray-600 font-medium">
+                            还需 {remaining.toLocaleString()} USDT
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${currentTier.color} transition-all duration-500 flex items-center justify-end pr-2`}
+                          style={{ width: `${Math.min(progress, 100)}%` }}
+                        >
+                          {progress > 10 && (
+                            <span className="text-white text-xs font-bold">
+                              {progress.toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {nextTier ? (
+                        <p className="text-xs text-gray-500 mt-2">
+                          当前业绩: {performance.toLocaleString()} USDT / {nextTier.threshold.toLocaleString()} USDT
+                        </p>
+                      ) : (
+                        <p className="text-xs text-green-600 mt-2 font-bold">
+                          🎉 恭喜！您已达到最高等级！
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
               {/* 提现确认弹窗 */}
               {isWithdrawModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
@@ -959,6 +1084,79 @@ function HomeContent() {
                   <LinkIcon className="w-5 h-5" />
                 </a>
               </div>
+
+              {/* 🔥 推荐人排行榜 */}
+              {referrerRanking.length > 0 && (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200 shadow-lg mt-8">
+                  <div className="flex items-center gap-3 mb-6">
+                    <span className="text-3xl">🏆</span>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-800">推荐人排行榜</h3>
+                      <p className="text-sm text-gray-600">直推业绩排名 · 实时更新</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {referrerRanking.map((referrer, index) => {
+                      const isTop3 = index < 3;
+                      const medals = ['🥇', '🥈', '🥉'];
+                      
+                      return (
+                        <div 
+                          key={referrer.wallet_address}
+                          className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
+                            isTop3 
+                              ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-md' 
+                              : 'bg-white border border-gray-200 hover:border-yellow-300'
+                          }`}
+                        >
+                          <div className="flex-shrink-0 w-12 text-center">
+                            {isTop3 ? (
+                              <span className="text-3xl">{medals[index]}</span>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
+                            )}
+                          </div>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-bold text-gray-800 truncate">
+                                {referrer.team_name || '未命名团队'}
+                              </span>
+                              {isTop3 && (
+                                <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
+                                  TOP {index + 1}
+                                </span>
+                              )}
+                            </div>
+                            <code className="text-xs text-gray-500 font-mono">
+                              {referrer.wallet_address.substring(0, 10)}...{referrer.wallet_address.substring(38)}
+                            </code>
+                          </div>
+                          
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-bold text-orange-600">
+                              {referrer.total_performance.toLocaleString()} USDT
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {referrer.referral_count} 人 · {referrer.total_nft_count} NFT
+                            </div>
+                            <div className="text-xs text-green-600 font-bold mt-1">
+                              预计佣金: {referrer.estimated_commission.toFixed(2)} USDT
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-yellow-200">
+                    <p className="text-xs text-gray-600 text-center">
+                      💡 推荐更多用户购买 NFT，冲击排行榜前三名，赢取额外奖励！
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* 推荐规则说明 */}
               <div className="bg-blue-50 rounded-xl p-6 border border-blue-100 mt-8">
