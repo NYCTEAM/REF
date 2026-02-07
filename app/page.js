@@ -467,20 +467,20 @@ export default function Home() {
               <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 text-white mb-6 shadow-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold flex items-center gap-2">
-                    <Coins className="w-6 h-6" /> 佣金统计
+                    <Coins className="w-6 h-6" /> 直推佣金统计
                   </h3>
                   <div className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
-                    当前等级: {(commissionStats.currentRate * 100).toFixed(0)}%
+                    当前奖励比例: {(commissionStats.currentRate * 100).toFixed(0)}%
                   </div>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                   <div>
-                    <p className="text-white/70 text-sm mb-1">团队业绩 (USDT)</p>
+                    <p className="text-white/70 text-sm mb-1">直推总业绩 (USDT)</p>
                     <p className="text-2xl font-bold">{commissionStats.totalPerformance.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-white/70 text-sm mb-1">总佣金 (USDT)</p>
+                    <p className="text-white/70 text-sm mb-1">预计佣金 (USDT)</p>
                     <p className="text-2xl font-bold">{commissionStats.totalCommission.toLocaleString()}</p>
                   </div>
                   <div>
