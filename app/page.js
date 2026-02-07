@@ -34,6 +34,7 @@ export default function Home() {
   const [memberNFTs, setMemberNFTs] = useState({}); 
   const [loadingNFTs, setLoadingNFTs] = useState(false);
   const [claimedAmount, setClaimedAmount] = useState(0);
+  const [myNFTBalance, setMyNFTBalance] = useState(0); // 当前用户的 NFT 余额
   const [commissionStats, setCommissionStats] = useState({
     totalPerformance: 0,
     currentRate: 0.10,
@@ -43,6 +44,13 @@ export default function Home() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   // ... (useEffect for teams and wallet connection remain same)
+
+  useEffect(() => {
+    if (walletAddress) {
+      checkUserStatus();
+      fetchMyNFTBalance(); // 检查自己的 NFT 余额
+    }
+  }, [walletAddress]);
 
   useEffect(() => {
     if (teamMembers.length > 0) {
@@ -465,6 +473,14 @@ export default function Home() {
 
               {/* 佣金看板 */}
               <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 text-white mb-6 shadow-lg">
+                
+                {myNFTBalance === 0 && (
+                  <div className="bg-red-500/90 text-white px-4 py-2 rounded-lg mb-4 flex items-center gap-2 text-sm font-bold shadow-sm backdrop-blur-sm border border-red-400">
+                    <AlertCircle className="w-5 h-5 shrink-0" />
+                    <span>您当前未持有 NFT，无法领取直推奖励。请先购买 NFT 激活权益。</span>
+                  </div>
+                )}
+
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-bold flex items-center gap-2">
                     <Coins className="w-6 h-6" /> 直推佣金统计
@@ -489,16 +505,18 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="text-white/70 text-sm mb-1">可提现 (USDT)</p>
-                    <p className="text-2xl font-bold text-yellow-300">{commissionStats.available.toLocaleString()}</p>
+                    <p className={`text-2xl font-bold ${myNFTBalance > 0 ? 'text-yellow-300' : 'text-gray-300'}`}>
+                      {commissionStats.available.toLocaleString()}
+                    </p>
                   </div>
                 </div>
 
                 <button
                   onClick={() => setIsWithdrawModalOpen(true)}
-                  disabled={commissionStats.available <= 0}
+                  disabled={commissionStats.available <= 0 || myNFTBalance === 0}
                   className="w-full bg-white text-indigo-600 py-3 rounded-lg font-bold hover:bg-indigo-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  申请提现
+                  {myNFTBalance === 0 ? '需持有 NFT 才能提现' : '申请提现'}
                 </button>
               </div>
 
