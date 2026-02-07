@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 const NFT_CONTRACT_ADDRESS = '0x3c117d186C5055071EfF91d87f2600eaF88D591D';
 const EAGLE_BSC_RPC_HK = 'https://bsc.eagleswap.llc';
 const EAGLE_HK_API_KEY = '26119c762d57f906602c2d4bed374e05bab696dccdd2c8708cfacd4303f71c5f';
+const PUBLIC_BSC_RPC = 'https://bsc-dataseed1.binance.org/'; // 公共 RPC 备用
 
 const NFT_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
@@ -16,14 +17,27 @@ const NFT_ABI = [
 
 // 扫描用户当前持有的 NFT（使用 balanceOf + tokenOfOwnerByIndex）
 async function scanUserBalance(walletAddress) {
+  let provider;
+  let contract;
+  
   try {
     console.log(`🔍 扫描 ${walletAddress} 的 NFT 余额...`);
     
-    const fetchRequest = new ethers.FetchRequest(EAGLE_BSC_RPC_HK);
-    fetchRequest.setHeader('X-API-Key', EAGLE_HK_API_KEY);
-    const provider = new ethers.JsonRpcProvider(fetchRequest);
-    
-    const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+    // 尝试使用 Eagle Swap RPC
+    try {
+      const fetchRequest = new ethers.FetchRequest(EAGLE_BSC_RPC_HK);
+      fetchRequest.setHeader('X-API-Key', EAGLE_HK_API_KEY);
+      provider = new ethers.JsonRpcProvider(fetchRequest);
+      contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+      
+      // 测试连接
+      await provider.getBlockNumber();
+      console.log('✅ 使用 Eagle Swap HK RPC');
+    } catch (error) {
+      console.log('⚠️ Eagle Swap RPC 失败，切换到公共 RPC');
+      provider = new ethers.JsonRpcProvider(PUBLIC_BSC_RPC);
+      contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
+    }
     
     // 1. 获取用户持有的 NFT 数量
     const balance = await contract.balanceOf(walletAddress);
