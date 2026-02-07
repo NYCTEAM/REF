@@ -11,7 +11,16 @@ const NFT_ABI = [
   "function balanceOf(address owner) view returns (uint256)"
 ];
 
-const CUSTOM_RPC = 'https://bsc.eagleswap.io';
+// 使用公共 BSC RPC 节点（支持 CORS）
+// 如果 bsc.eagleswap.io 需要使用，请联系服务器管理员配置 CORS 头：
+// Access-Control-Allow-Origin: https://eagleswaps.com
+const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/'; // Binance 官方节点，支持 CORS
+// 备用节点（都支持 CORS）:
+// 'https://bsc-dataseed2.binance.org/'
+// 'https://bsc-dataseed3.binance.org/'
+// 'https://bsc-dataseed4.binance.org/'
+// 'https://rpc.ankr.com/bsc'
+// 'https://bsc.publicnode.com'
 const NFT_PRICE = 100; // 假设每个 NFT 价值 100 USDT (用于计算业绩)
 
 function HomeContent() {
