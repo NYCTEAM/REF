@@ -148,10 +148,14 @@ export async function POST(request) {
       );
     }
 
-    // 🔥 自动扫描用户的 NFT（异步执行，不阻塞响应）
-    scanUserNFTs(walletAddress).catch(err => {
-      console.error(`自动扫描 ${walletAddress} NFT 失败:`, err);
-    });
+    // 🔥 同步扫描用户的 NFT，确保绑定后立即有正确的 NFT 状态
+    try {
+      await scanUserNFTs(walletAddress);
+      console.log(`✅ ${walletAddress} 绑定成功，NFT 数据已同步`);
+    } catch (scanError) {
+      console.error(`⚠️ ${walletAddress} 绑定成功，但 NFT 扫描失败:`, scanError);
+      // 即使扫描失败，也返回绑定成功（用户可以稍后手动刷新）
+    }
 
     return NextResponse.json({
       success: true,
