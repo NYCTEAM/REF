@@ -225,6 +225,82 @@ export default function StatsPage() {
           </div>
         </div>
 
+        {/* NFT 销售排名 */}
+        {stats?.nftSalesRanking && stats.nftSalesRanking.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <Coins className="w-6 h-6 text-orange-500" />
+                NFT 销售排行榜
+              </h2>
+            </div>
+            
+            <div className="mb-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
+              <p className="text-sm text-gray-700">
+                <strong>排名规则：</strong>按 NFT MINT 数量降序排列，数量相同时按总价值排序。仅统计 MINT 事件，不含二次转账。
+              </p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
+                  <tr>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-600">排名</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-600">钱包地址</th>
+                    <th className="text-left py-4 px-6 font-semibold text-gray-600">所属团队</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-600">NFT 数量</th>
+                    <th className="text-right py-4 px-6 font-semibold text-gray-600">总价值 (USDT)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {stats.nftSalesRanking.map((seller, index) => {
+                    const rank = index + 1;
+                    return (
+                      <tr key={index} className={`hover:bg-gray-50 transition-colors ${
+                        rank === 1 ? 'bg-yellow-50' :
+                        rank === 2 ? 'bg-gray-50' :
+                        rank === 3 ? 'bg-orange-50' : ''
+                      }`}>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            {rank <= 3 ? getRankIcon(rank) : <span className="font-bold text-gray-600">#{rank}</span>}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm text-gray-700">{seller.wallet_address}</span>
+                            <button
+                              onClick={() => copyToClipboard(seller.wallet_address, '')}
+                              className={`p-1 rounded transition-all ${
+                                copiedAddress === seller.wallet_address
+                                  ? 'bg-green-100 text-green-600'
+                                  : 'hover:bg-gray-100 text-gray-400'
+                              }`}
+                            >
+                              {copiedAddress === seller.wallet_address ? (
+                                <CheckCircle2 className="w-4 h-4" />
+                              ) : (
+                                <Copy className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6 text-gray-600">{seller.team_name}</td>
+                        <td className="py-4 px-6 text-right">
+                          <span className="font-bold text-orange-600 text-lg">{seller.nft_count}</span>
+                        </td>
+                        <td className="py-4 px-6 text-right">
+                          <span className="font-bold text-green-600">{seller.nft_mint_amount.toLocaleString()}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {/* 推荐人排名 */}
         {stats?.referrerRanking && stats.referrerRanking.length > 0 && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">

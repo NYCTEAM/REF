@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/sqlite-db.js';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST() {
   try {
     // 这里其实应该加权限验证，但因为是在管理员后台调用，且项目结构简单，

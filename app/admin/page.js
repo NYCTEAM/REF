@@ -376,7 +376,7 @@ export default function AdminPage() {
 
         {/* 统计看板 */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-blue-500">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
@@ -417,6 +417,21 @@ export default function AdminPage() {
                 </span>
               </div>
               <h3 className="text-gray-600 font-semibold">团队数量</h3>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-lg p-6 border-l-4 border-orange-500">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
+                  <Coins className="w-6 h-6 text-orange-600" />
+                </div>
+                <span className="text-3xl font-bold text-gray-800">
+                  {stats.totalNFTsSold || 0}
+                </span>
+              </div>
+              <h3 className="text-gray-600 font-semibold">NFT 总销量</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                总价值: {(stats.totalNFTValue || 0).toLocaleString()} USDT
+              </p>
             </div>
           </div>
         )}
