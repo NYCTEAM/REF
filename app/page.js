@@ -137,10 +137,12 @@ function HomeContent() {
           console.log('新账户地址:', newAddress);
           setWalletAddress(newAddress);
           setIsConnected(true);
-          setIsBound(false);
-          setTeamName('');
-          setTeamMembers([]);
-          showMessage('已切换到新钱包', 'success');
+          // 不要立即重置 isBound，让 checkUserStatus 来判断
+          // setIsBound(false);
+          // setTeamName('');
+          // setTeamMembers([]);
+          showMessage('已切换到新钱包，正在检查状态...', 'success');
+          // checkUserStatus 会在 walletAddress 变化时自动执行
         }
       };
 
