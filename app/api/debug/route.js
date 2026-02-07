@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/sqlite-db.js';
-import Database from 'better-sqlite3';
 import path from 'path';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const DB_PATH = process.env.DB_PATH || '/data';
+    const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), 'data');
     const DB_FILE = path.join(DB_PATH, 'referrals.db');
     
     console.log('=== 数据库调试信息 ===');
@@ -24,7 +25,8 @@ export async function GET() {
     }
     
     // 直接查询数据库
-    const database = Database(DB_FILE);
+    const Database = require('better-sqlite3');
+    const database = new Database(DB_FILE);
     
     // 获取所有表
     const tables = database.prepare(`

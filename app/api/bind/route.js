@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/sqlite-db.js';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { walletAddress, referrerAddress, teamName } = await request.json();

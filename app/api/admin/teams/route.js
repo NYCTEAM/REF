@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/sqlite-db.js';
 
+export const dynamic = 'force-dynamic';
+
 // 获取所有团队列表 (管理员视角)
 export async function GET() {
   try {
