@@ -167,10 +167,30 @@ function HomeContent() {
       checkUserStatus();
       fetchMyNFTBalance(); // 检查自己的 NFT 余额
       
+      // 🔥 扫描用户余额状态（balanceOf + tokenOfOwnerByIndex）
+      scanUserBalance();
+      
       // 🔥 自动刷新 NFT 数据（如果需要）
       autoRefreshNFTData();
     }
   }, [walletAddress]);
+  
+  // 扫描用户余额状态
+  const scanUserBalance = async () => {
+    try {
+      const res = await fetch('/api/user/scan-balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ walletAddress })
+      });
+      const data = await res.json();
+      if (data.success) {
+        console.log(`✅ 余额扫描完成: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('余额扫描失败:', error);
+    }
+  };
   
   // 自动刷新 NFT 数据
   const autoRefreshNFTData = async (forceRefresh = false) => {
