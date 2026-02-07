@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye, AlertCircle } from 'lucide-react';
+import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye, AlertCircle, Coins } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {
@@ -23,6 +23,11 @@ export default function AdminPage() {
   const [selectedTeamMembers, setSelectedTeamMembers] = useState([]);
   const [currentTeamName, setCurrentTeamName] = useState('');
 
+  // 提现管理状态
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [processingId, setProcessingId] = useState(null);
+  const [txHashInput, setTxHashInput] = useState('');
+
   useEffect(() => {
     // 检查登录状态
     const savedEmail = localStorage.getItem('adminEmail');
@@ -31,8 +36,46 @@ export default function AdminPage() {
       setAdminEmail(savedEmail);
       fetchTeams();
       fetchStats(); // 加载统计数据
+      fetchWithdrawals();
     }
   }, []);
+
+  const fetchWithdrawals = async () => {
+    try {
+      const res = await fetch('/api/admin/withdraw');
+      const data = await res.json();
+      if (data.success) {
+        setWithdrawals(data.withdrawals);
+      }
+    } catch (error) {
+      console.error('获取提现列表失败:', error);
+    }
+  };
+
+  const handleProcessWithdrawal = async (id, status) => {
+    if (status === 'approved' && !txHashInput) {
+      if (!confirm('确定不填写交易哈希直接批准吗？')) return;
+    }
+    
+    try {
+      const res = await fetch('/api/admin/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status, txHash: txHashInput })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showMessage('操作成功', 'success');
+        fetchWithdrawals();
+        setProcessingId(null);
+        setTxHashInput('');
+      } else {
+        showMessage(data.error || '操作失败', 'error');
+      }
+    } catch (error) {
+      showMessage('请求失败', 'error');
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -389,6 +432,88 @@ export default function AdminPage() {
             <span>{message}</span>
           </div>
         )}
+
+        {/* 提现审核 */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+              <Coins className="w-6 h-6" />
+              提现审核 ({withdrawals.length})
+            </h2>
+            <button onClick={fetchWithdrawals} className="text-sm text-blue-600 hover:underline">刷新</button>
+          </div>
+
+          {withdrawals.length === 0 ? (
+            <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-xl">
+              暂无待审核的提现申请
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {withdrawals.map((item) => (
+                <div key={item.id} className="p-4 border border-gray-200 rounded-xl bg-gray-50 flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-gray-800 text-lg">{item.amount} USDT</span>
+                      {item.status === 'pending' && <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full">待处理</span>}
+                      {item.status === 'approved' && <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">已处理</span>}
+                      {item.status === 'rejected' && <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded-full">已拒绝</span>}
+                    </div>
+                    <p className="text-sm text-gray-600 font-mono mb-1">申请人: {item.user_address}</p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(item.created_at).toLocaleString()}
+                      {item.tx_hash && <span className="ml-2 font-mono">Tx: {item.tx_hash.substring(0, 10)}...</span>}
+                    </p>
+                  </div>
+                  
+                  {item.status === 'pending' && (
+                    processingId === item.id ? (
+                      <div className="flex flex-col gap-2 w-full md:w-auto">
+                        <input 
+                          type="text" 
+                          placeholder="输入交易哈希(选填)" 
+                          className="px-3 py-2 border rounded text-sm w-full md:w-64"
+                          value={txHashInput}
+                          onChange={(e) => setTxHashInput(e.target.value)}
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleProcessWithdrawal(item.id, 'approved')}
+                            className="flex-1 bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 text-sm"
+                          >
+                            确认打款
+                          </button>
+                          <button 
+                            onClick={() => setProcessingId(null)}
+                            className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                          >
+                            取消
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => setProcessingId(item.id)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          处理
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if(confirm('确定拒绝此申请吗？')) handleProcessWithdrawal(item.id, 'rejected');
+                          }}
+                          className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
+                        >
+                          拒绝
+                        </button>
+                      </div>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* 创建团队 */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
