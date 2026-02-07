@@ -241,60 +241,18 @@ function HomeContent() {
   const fetchMemberNFTs = async () => {
     try {
       setLoadingNFTs(true);
-      // 使用自定义 RPC 连接
-      const provider = new ethers.JsonRpcProvider(CUSTOM_RPC);
       
-      // Transfer 事件 Topic
-      const transferTopic = ethers.id("Transfer(address,address,uint256)");
-      const zeroAddressTopic = ethers.zeroPadValue(ethers.ZeroAddress, 32);
-
+      // 🔥 直接从数据库读取 NFT 数据，不查询区块链
       const balances = {};
       
-      // 并行查询所有成员的 MINT 记录
-      await Promise.all(teamMembers.map(async (member) => {
-        try {
-          // 构造过滤器：From = 0x00...00 (Mint), To = Member Address
-          const userTopic = ethers.zeroPadValue(member.wallet_address, 32);
-          const filter = {
-            address: NFT_CONTRACT_ADDRESS,
-            topics: [
-              transferTopic,
-              zeroAddressTopic, // From: 0x0
-              userTopic         // To: User
-            ],
-            fromBlock: 0, 
-            toBlock: 'latest'
-          };
-
-          // 获取日志数量作为 MINT 数量
-          const logs = await provider.getLogs(filter);
-          const count = logs.length;
-          balances[member.wallet_address] = count;
-
-          // 同步到数据库
-          // 注意：这会让当前浏览者的浏览器发起大量请求，生产环境建议用队列或防抖
-          // 但为了满足 "保存到数据库" 的需求，我们直接调用
-          if (count >= 0) {
-            const mintAmount = count * NFT_PRICE;
-            fetch('/api/user/sync-nft', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                walletAddress: member.wallet_address,
-                nftCount: count,
-                mintAmount: mintAmount
-              })
-            }).catch(e => console.error('Sync error:', e));
-          }
-        } catch (err) {
-          console.error(`查询 ${member.wallet_address} Mint记录失败:`, err);
-          balances[member.wallet_address] = -1; 
-        }
-      }));
+      teamMembers.forEach((member) => {
+        // 使用数据库中已保存的 NFT 数量
+        balances[member.wallet_address] = member.nft_count || 0;
+      });
 
       setMemberNFTs(balances);
     } catch (error) {
-      console.error('批量查询NFT记录失败:', error);
+      console.error('读取NFT数据失败:', error);
     } finally {
       setLoadingNFTs(false);
     }
