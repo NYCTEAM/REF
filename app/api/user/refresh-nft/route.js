@@ -129,8 +129,8 @@ export async function POST(request) {
         const now = new Date();
         const minutesSinceLastSync = (now - lastSyncTime) / (1000 * 60);
         
-        // 如果上次同步在 5 分钟内，跳过
-        if (minutesSinceLastSync < 5) {
+        // 如果上次同步在 1 分钟内，跳过
+        if (minutesSinceLastSync < 1) {
           console.log(`⏭️ ${walletAddress} 数据较新（${minutesSinceLastSync.toFixed(1)} 分钟前），跳过刷新`);
           return NextResponse.json({
             success: true,
