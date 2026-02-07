@@ -69,9 +69,11 @@ async function scanUserNFTs(walletAddress) {
       }
     }
     
+    // 清除旧数据
+    db.clearUserNFTs(walletAddress);
+    
     if (nfts.length > 0) {
-      db.clearUserNFTs(walletAddress);
-      
+      // 保存新数据
       for (const nft of nfts) {
         db.saveUserNFT(
           walletAddress,
@@ -83,15 +85,14 @@ async function scanUserNFTs(walletAddress) {
         );
       }
       
-      db.updateUserNftStats(walletAddress, nfts.length, totalValue);
-      db.updateSyncProgress(walletAddress, latestBlock, nfts.length, 'completed');
-      
       console.log(`✅ ${walletAddress} NFT 刷新完成: ${nfts.length} 个 NFT, 总价值 ${totalValue} USDT`);
     } else {
-      // 即使没有 NFT，也要更新统计为 0
-      db.updateUserNftStats(walletAddress, 0, 0);
       console.log(`ℹ️ ${walletAddress} 没有持有 NFT`);
     }
+    
+    // 🔥 无论是否有 NFT，都要更新统计和同步进度
+    db.updateUserNftStats(walletAddress, nfts.length, totalValue);
+    db.updateSyncProgress(walletAddress, latestBlock, nfts.length, 'completed');
     
     return { success: true, nftCount: nfts.length, totalValue };
     
