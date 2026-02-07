@@ -127,11 +127,11 @@ export async function POST(request) {
       if (syncProgress) {
         const lastSyncTime = new Date(syncProgress.updated_at);
         const now = new Date();
-        const hoursSinceLastSync = (now - lastSyncTime) / (1000 * 60 * 60);
+        const minutesSinceLastSync = (now - lastSyncTime) / (1000 * 60);
         
-        // 如果上次同步在 1 小时内，跳过
-        if (hoursSinceLastSync < 1) {
-          console.log(`⏭️ ${walletAddress} 数据较新，跳过刷新`);
+        // 如果上次同步在 5 分钟内，跳过
+        if (minutesSinceLastSync < 5) {
+          console.log(`⏭️ ${walletAddress} 数据较新（${minutesSinceLastSync.toFixed(1)} 分钟前），跳过刷新`);
           return NextResponse.json({
             success: true,
             message: '数据已是最新',
