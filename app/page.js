@@ -290,9 +290,12 @@ function HomeContent() {
         setTeamName(data.user.team_name);
         setClaimedAmount(data.user.claimed_amount || 0); // 获取已提现金额
         if (data.user.referrer_address) {
-          console.log('从数据库读取的推荐人地址:', data.user.referrer_address);
-          console.log('URL 参数中的推荐人地址:', searchParams.get('ref'));
+          console.log('✅ 数据库中的推荐人地址:', data.user.referrer_address);
+          console.log('🔗 URL 参数中的推荐人地址:', searchParams.get('ref'));
+          
+          // 显示数据库中实际保存的推荐人地址
           setReferrerAddress(data.user.referrer_address);
+          
           const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
           const leader = leaders.find(l => l.address.toLowerCase() === data.user.referrer_address.toLowerCase());
           if (leader) {
@@ -411,11 +414,11 @@ function HomeContent() {
       finalTeamName = 'Default Node';
     }
 
-    console.log('Bind params:', {
-      walletAddress,
-      referrerAddress,
-      teamName: finalTeamName
-    });
+    console.log('🔵 准备绑定，参数如下:');
+    console.log('  - 钱包地址:', walletAddress);
+    console.log('  - 推荐人地址:', referrerAddress);
+    console.log('  - URL ref 参数:', searchParams.get('ref'));
+    console.log('  - 团队名称:', finalTeamName);
 
     try {
       setLoading(true);
@@ -591,6 +594,25 @@ function HomeContent() {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 推荐人信息显示 */}
+          {isConnected && !isBound && referrerAddress && (
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                <UserPlus className="w-6 h-6" />
+                您的推荐人
+              </h2>
+              <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200">
+                {referrerName && (
+                  <p className="text-sm text-gray-600 mb-2 font-semibold">{referrerName}</p>
+                )}
+                <p className="text-xs text-gray-500 mb-1">推荐人钱包地址:</p>
+                <p className="font-mono text-sm text-gray-800 break-all bg-white px-3 py-2 rounded-lg border border-blue-100">
+                  {referrerAddress}
+                </p>
+              </div>
             </div>
           )}
 
