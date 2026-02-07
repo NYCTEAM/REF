@@ -11,16 +11,12 @@ const NFT_ABI = [
   "function balanceOf(address owner) view returns (uint256)"
 ];
 
-// 使用公共 BSC RPC 节点（支持 CORS）
-// 如果 bsc.eagleswap.io 需要使用，请联系服务器管理员配置 CORS 头：
-// Access-Control-Allow-Origin: https://eagleswaps.com
-const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/'; // Binance 官方节点，支持 CORS
-// 备用节点（都支持 CORS）:
-// 'https://bsc-dataseed2.binance.org/'
-// 'https://bsc-dataseed3.binance.org/'
-// 'https://bsc-dataseed4.binance.org/'
-// 'https://rpc.ankr.com/bsc'
-// 'https://bsc.publicnode.com'
+// 🔥 使用 Eagle Swap 专用 RPC（更快，更稳定）
+const EAGLE_BSC_RPC = 'https://bsc.eagleswap.llc';
+const EAGLE_API_KEY = '26119c762d57f906602c2d4bed374e05bab696dccdd2c8708cfacd4303f71c5f';
+
+// 备用公共 RPC（如果专用 RPC 失败）
+const PUBLIC_BSC_RPC = 'https://bsc-dataseed1.binance.org/';
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -256,7 +252,22 @@ function HomeContent() {
   const fetchMyNFTBalance = async () => {
     if (!walletAddress) return;
     try {
-      const provider = new ethers.JsonRpcProvider(CUSTOM_RPC);
+      let provider;
+      
+      // 🔥 尝试使用 Eagle Swap 专用 RPC
+      try {
+        const fetchRequest = new ethers.FetchRequest(EAGLE_BSC_RPC);
+        fetchRequest.setHeader('X-API-Key', EAGLE_API_KEY);
+        provider = new ethers.JsonRpcProvider(fetchRequest);
+        
+        // 测试连接
+        await provider.getBlockNumber();
+        console.log('✅ 前端使用 Eagle Swap RPC');
+      } catch (error) {
+        console.log('⚠️ Eagle Swap RPC 失败，切换到公共 RPC');
+        provider = new ethers.JsonRpcProvider(PUBLIC_BSC_RPC);
+      }
+      
       const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, NFT_ABI, provider);
       const balance = await contract.balanceOf(walletAddress);
       setMyNFTBalance(Number(balance));
