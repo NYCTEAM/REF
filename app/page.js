@@ -148,7 +148,13 @@ function HomeContent() {
   };
 
   const checkUserStatus = async () => {
+    if (!walletAddress) {
+      setIsCheckingStatus(false);
+      return;
+    }
+    
     try {
+      setIsCheckingStatus(true);
       const response = await fetch(`/api/user/${walletAddress}`);
       if (!response.ok) throw new Error('API Error');
       const data = await response.json();
@@ -171,6 +177,8 @@ function HomeContent() {
       }
     } catch (error) {
       console.error('检查用户状态失败:', error);
+    } finally {
+      setIsCheckingStatus(false);
     }
   };
 
@@ -365,7 +373,13 @@ function HomeContent() {
         )}
 
         {/* 主卡片 */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        {isCheckingStatus && isConnected ? (
+          <div className="bg-white rounded-2xl shadow-xl p-12 mb-8 flex flex-col items-center justify-center">
+            <Loader2 className="w-12 h-12 text-blue-600 animate-spin mb-4" />
+            <p className="text-gray-600 font-medium">正在加载用户信息...</p>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           
           {/* 接入点选择 - 仅在未绑定且无推荐人时显示 */}
           {!isBound && !referrerAddress && (
@@ -726,7 +740,8 @@ function HomeContent() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
