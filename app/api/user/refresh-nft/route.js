@@ -73,12 +73,17 @@ async function scanUserNFTs(walletAddress) {
       );
       
       if (tier) {
+        // 获取区块时间戳
+        const block = await provider.getBlock(log.blockNumber);
+        const timestamp = block ? new Date(block.timestamp * 1000).toISOString() : new Date().toISOString();
+        
         nfts.push({
           tokenId,
           tierId: tier.id,
           price: tier.price,
           txHash: log.transactionHash,
-          blockNumber: log.blockNumber
+          blockNumber: log.blockNumber,
+          timestamp
         });
         totalValue += tier.price;
       }
@@ -95,7 +100,8 @@ async function scanUserNFTs(walletAddress) {
           nft.tierId,
           nft.price,
           nft.txHash,
-          nft.blockNumber
+          nft.blockNumber,
+          nft.timestamp
         );
       }
       
