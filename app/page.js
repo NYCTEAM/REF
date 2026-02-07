@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Wallet, Users, CheckCircle, AlertCircle, Link as LinkIcon, Shield, Copy, Info, Loader2, Coins } from 'lucide-react';
 import Link from 'next/link';
 import { ethers } from 'ethers';
@@ -13,7 +14,8 @@ const NFT_ABI = [
 const CUSTOM_RPC = 'https://bsc.eagleswap.llc/';
 const NFT_PRICE = 100; // 假设每个 NFT 价值 100 USDT (用于计算业绩)
 
-export default function Home() {
+function HomeContent() {
+  const searchParams = useSearchParams();
   const [walletAddress, setWalletAddress] = useState('');
   const [referrerAddress, setReferrerAddress] = useState('');
   const [referrerName, setReferrerName] = useState('');
@@ -148,6 +150,7 @@ export default function Home() {
   const checkUserStatus = async () => {
     try {
       const response = await fetch(`/api/user/${walletAddress}`);
+      if (!response.ok) throw new Error('API Error');
       const data = await response.json();
       
       if (data.exists) {
@@ -726,5 +729,17 @@ export default function Home() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-blue-50">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
