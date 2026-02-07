@@ -21,7 +21,6 @@ const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/'; // Binance 官方节点
 // 'https://bsc-dataseed4.binance.org/'
 // 'https://rpc.ankr.com/bsc'
 // 'https://bsc.publicnode.com'
-const NFT_PRICE = 100; // 假设每个 NFT 价值 100 USDT (用于计算业绩)
 
 function HomeContent() {
   const searchParams = useSearchParams();
@@ -203,13 +202,14 @@ function HomeContent() {
 
   // 计算佣金统计
   useEffect(() => {
-    if (Object.keys(memberNFTs).length > 0) {
-      let totalHoldings = 0;
-      Object.values(memberNFTs).forEach(bal => {
-        if (bal > 0) totalHoldings += bal;
+    if (teamMembers.length > 0) {
+      // 🔥 使用数据库中的实际 NFT 价值，而不是固定价格
+      let totalPerformance = 0;
+      teamMembers.forEach(member => {
+        // nft_mint_amount 是数据库中保存的实际 NFT 总价值
+        totalPerformance += member.nft_mint_amount || 0;
       });
 
-      const totalPerformance = totalHoldings * NFT_PRICE;
       let rate = 0.10;
       if (totalPerformance >= 10000) rate = 0.20;
       else if (totalPerformance >= 2000) rate = 0.15;
@@ -224,7 +224,7 @@ function HomeContent() {
         available
       });
     }
-  }, [memberNFTs, claimedAmount]);
+  }, [teamMembers, claimedAmount]);
 
   const fetchMyNFTBalance = async () => {
     if (!walletAddress) return;
