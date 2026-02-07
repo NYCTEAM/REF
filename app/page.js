@@ -35,7 +35,8 @@ function HomeContent() {
   const [teammates, setTeammates] = useState([]); 
   const [selectedTeam, setSelectedTeam] = useState('');
   const [availableTeams, setAvailableTeams] = useState([]);
-  const [copiedTeammate, setCopiedTeammate] = useState(''); 
+  const [copiedTeammate, setCopiedTeammate] = useState('');
+  const [isCopied, setIsCopied] = useState(false); // 复制按钮状态
   
   // NFT & 佣金状态
   const [memberNFTs, setMemberNFTs] = useState({}); 
@@ -375,10 +376,16 @@ function HomeContent() {
   };
 
 
-  const copyAddress = (address) => {
-    navigator.clipboard.writeText(address);
-    setCopiedTeammate(address);
-    setTimeout(() => setCopiedTeammate(''), 2000);
+  const copyAddress = async (address) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedTeammate(address);
+      showMessage('✅ 地址已复制到剪贴板！', 'success');
+      setTimeout(() => setCopiedTeammate(''), 2000);
+    } catch (error) {
+      console.error('复制失败:', error);
+      showMessage('❌ 复制失败，请手动复制', 'error');
+    }
   };
 
   const connectWallet = async () => {
@@ -500,11 +507,25 @@ function HomeContent() {
     setTimeout(() => setMessage(''), 5000);
   };
 
-  const copyReferralLink = () => {
+  const copyReferralLink = async () => {
     if (!walletAddress) return;
-    const link = `${window.location.origin}?ref=${walletAddress}`;
-    navigator.clipboard.writeText(link);
-    showMessage('链接已复制', 'success');
+    
+    try {
+      const link = `${window.location.origin}?ref=${walletAddress}`;
+      await navigator.clipboard.writeText(link);
+      
+      // 🔥 显示复制成功状态
+      setIsCopied(true);
+      showMessage('✅ 推荐链接已复制到剪贴板！', 'success');
+      
+      // 2秒后恢复按钮状态
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error('复制失败:', error);
+      showMessage('❌ 复制失败，请手动复制', 'error');
+    }
   };
 
   return (
@@ -904,9 +925,24 @@ function HomeContent() {
                   />
                   <button
                     onClick={copyReferralLink}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md whitespace-nowrap"
+                    disabled={isCopied}
+                    className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 shadow-md whitespace-nowrap flex items-center gap-2 ${
+                      isCopied 
+                        ? 'bg-green-500 text-white scale-105' 
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    }`}
                   >
-                    复制链接
+                    {isCopied ? (
+                      <>
+                        <CheckCircle className="w-5 h-5" />
+                        已复制！
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-5 h-5" />
+                        复制链接
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
