@@ -186,6 +186,8 @@ function HomeContent() {
       const data = await res.json();
       if (data.success) {
         console.log(`✅ 余额扫描完成: ${data.message}`);
+        // 🔥 扫描完成后重新加载用户状态，显示最新的 NFT 数据
+        await checkUserStatus();
       }
     } catch (error) {
       console.error('余额扫描失败:', error);
@@ -831,15 +833,24 @@ function HomeContent() {
                                     <Loader2 className="w-3 h-3 animate-spin" /> 查询中
                                   </span>
                                 ) : (
-                                  (memberNFTs[member.wallet_address] > 0) ? (
-                                     <div className="flex flex-col items-end">
-                                       <div className="flex items-center gap-1 text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200 shadow-sm">
-                                          <Coins className="w-3 h-3" />
-                                          <span className="font-bold">持有: {memberNFTs[member.wallet_address]}</span>
-                                       </div>
-                                     </div>
+                                  // 🔥 区分旧 NFT 和新购买的 NFT
+                                  (member.nft_mint_amount > 0) ? (
+                                    // 有新购买记录 - 显示数量
+                                    <div className="flex flex-col items-end">
+                                      <div className="flex items-center gap-1 text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200 shadow-sm">
+                                        <Coins className="w-3 h-3" />
+                                        <span className="font-bold">持有: {Math.round(member.nft_mint_amount / 10)}</span>
+                                      </div>
+                                    </div>
+                                  ) : (memberNFTs[member.wallet_address] > 0) ? (
+                                    // 只有旧 NFT（余额 > 0 但没有新购买记录）- 只显示"持有NFT"
+                                    <div className="flex items-center gap-1 text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full border border-blue-200 shadow-sm">
+                                      <Coins className="w-3 h-3" />
+                                      <span className="font-bold text-[10px]">持有NFT</span>
+                                    </div>
                                   ) : (
-                                     <span className="text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full text-[10px]">未持有NFT</span>
+                                    // 没有 NFT
+                                    <span className="text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full text-[10px]">未持有NFT</span>
                                   )
                                 )}
                             </div>
