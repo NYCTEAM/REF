@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye, AlertCircle, Coins } from 'lucide-react';
+import { UserPlus, Copy, Link as LinkIcon, Users, Trash2, CheckCircle, Mail, Lock, LogOut, TrendingUp, Download, Eye, AlertCircle, Coins, RefreshCw, Info } from 'lucide-react';
 import Link from 'next/link';
 
 export default function AdminPage() {

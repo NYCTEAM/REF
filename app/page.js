@@ -290,6 +290,8 @@ function HomeContent() {
         setTeamName(data.user.team_name);
         setClaimedAmount(data.user.claimed_amount || 0); // 获取已提现金额
         if (data.user.referrer_address) {
+          console.log('从数据库读取的推荐人地址:', data.user.referrer_address);
+          console.log('URL 参数中的推荐人地址:', searchParams.get('ref'));
           setReferrerAddress(data.user.referrer_address);
           const leaders = JSON.parse(localStorage.getItem('teamLeaders') || '[]');
           const leader = leaders.find(l => l.address.toLowerCase() === data.user.referrer_address.toLowerCase());
@@ -698,9 +700,22 @@ function HomeContent() {
                     <Shield className="w-6 h-6 text-blue-500" />
                     <h3 className="text-lg font-semibold text-gray-800">您的推荐人</h3>
                   </div>
-                  <div className="p-3 bg-gray-50 rounded-lg break-all font-mono text-sm text-gray-600">
-                    {referrerName || referrerAddress || '无推荐人'}
-                  </div>
+                  {referrerAddress ? (
+                    <div>
+                      {referrerName && (
+                        <div className="mb-2 text-sm font-semibold text-gray-700">
+                          {referrerName}
+                        </div>
+                      )}
+                      <div className="p-3 bg-gray-50 rounded-lg break-all font-mono text-xs text-gray-600">
+                        {referrerAddress}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-500">
+                      无推荐人
+                    </div>
+                  )}
                 </div>
 
                 {/* 推荐统计 */}
