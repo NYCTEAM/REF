@@ -27,6 +27,11 @@ export default function AdminPage() {
   const [withdrawals, setWithdrawals] = useState([]);
   const [processingId, setProcessingId] = useState(null);
   const [txHashInput, setTxHashInput] = useState('');
+  
+  // NFT 同步状态
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
+  const [syncResults, setSyncResults] = useState(null);
 
   useEffect(() => {
     // 检查登录状态
@@ -74,6 +79,97 @@ export default function AdminPage() {
       }
     } catch (error) {
       showMessage('请求失败', 'error');
+    }
+  };
+
+  const syncAllNFTs = async () => {
+    if (!confirm('确定要同步所有用户的 NFT 数据吗？这可能需要几分钟时间。')) return;
+    
+    try {
+      setIsSyncing(true);
+      setSyncProgress({ current: 0, total: 0 });
+      setSyncResults(null);
+      
+      // 动态导入 ethers（仅在需要时加载）
+      const { ethers } = await import('ethers');
+      
+      const NFT_CONTRACT_ADDRESS = '0x3c117d186C5055071EfF91d87f2600eaF88D591D';
+      const CUSTOM_RPC = 'https://bsc-dataseed1.binance.org/';
+      const NFT_PRICE = 100;
+      
+      // 获取所有用户
+      const statsRes = await fetch('/api/stats');
+      const statsData = await statsRes.json();
+      const allUsers = statsData.allUsers || [];
+      
+      if (allUsers.length === 0) {
+        showMessage('没有用户需要同步', 'error');
+        setIsSyncing(false);
+        return;
+      }
+      
+      setSyncProgress({ current: 0, total: allUsers.length });
+      
+      const provider = new ethers.JsonRpcProvider(CUSTOM_RPC);
+      const transferTopic = ethers.id("Transfer(address,address,uint256)");
+      const zeroAddressTopic = ethers.zeroPadValue(ethers.ZeroAddress, 32);
+      
+      let successCount = 0;
+      let failCount = 0;
+      
+      // 批量处理用户
+      for (let i = 0; i < allUsers.length; i++) {
+        const user = allUsers[i];
+        setSyncProgress({ current: i + 1, total: allUsers.length });
+        
+        try {
+          const userTopic = ethers.zeroPadValue(user.wallet_address, 32);
+          const filter = {
+            address: NFT_CONTRACT_ADDRESS,
+            topics: [transferTopic, zeroAddressTopic, userTopic],
+            fromBlock: 0,
+            toBlock: 'latest'
+          };
+          
+          const logs = await provider.getLogs(filter);
+          const nftCount = logs.length;
+          const mintAmount = nftCount * NFT_PRICE;
+          
+          // 同步到数据库
+          const syncRes = await fetch('/api/user/sync-nft', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              walletAddress: user.wallet_address,
+              nftCount: nftCount,
+              mintAmount: mintAmount
+            })
+          });
+          
+          if (syncRes.ok) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+          
+          // 避免请求过快
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (err) {
+          console.error(`同步 ${user.wallet_address} 失败:`, err);
+          failCount++;
+        }
+      }
+      
+      setSyncResults({ successCount, failCount, total: allUsers.length });
+      showMessage(`同步完成！成功: ${successCount}, 失败: ${failCount}`, 'success');
+      fetchStats(); // 刷新统计数据
+      
+    } catch (error) {
+      console.error('NFT 同步失败:', error);
+      showMessage('同步失败: ' + error.message, 'error');
+    } finally {
+      setIsSyncing(false);
     }
   };
 
@@ -447,6 +543,79 @@ export default function AdminPage() {
             <span>{message}</span>
           </div>
         )}
+
+        {/* NFT 数据同步 */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <RefreshCw className={`w-6 h-6 ${isSyncing ? 'animate-spin' : ''}`} />
+                NFT 数据同步
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">扫描所有用户的 NFT MINT 事件并保存到数据库</p>
+            </div>
+            <button
+              onClick={syncAllNFTs}
+              disabled={isSyncing}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+              {isSyncing ? '同步中...' : '开始同步'}
+            </button>
+          </div>
+
+          {isSyncing && (
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  正在同步: {syncProgress.current} / {syncProgress.total}
+                </span>
+                <span className="text-sm text-gray-600">
+                  {syncProgress.total > 0 ? Math.round((syncProgress.current / syncProgress.total) * 100) : 0}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${syncProgress.total > 0 ? (syncProgress.current / syncProgress.total) * 100 : 0}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {syncResults && (
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <h3 className="font-semibold text-gray-800 mb-2">同步完成</h3>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">总用户数</p>
+                  <p className="text-2xl font-bold text-gray-800">{syncResults.total}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">成功同步</p>
+                  <p className="text-2xl font-bold text-green-600">{syncResults.successCount}</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">失败</p>
+                  <p className="text-2xl font-bold text-red-600">{syncResults.failCount}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              说明
+            </h3>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• 自动扫描所有用户的 NFT MINT 事件（从区块链 0 开始）</li>
+              <li>• 只统计 MINT 事件（Transfer from 0x0），不统计二次转账</li>
+              <li>• 同步结果会自动保存到数据库的 nft_count 和 nft_mint_amount 字段</li>
+              <li>• 建议定期执行同步以保持数据最新</li>
+            </ul>
+          </div>
+        </div>
 
         {/* 提现审核 */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
