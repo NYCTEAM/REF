@@ -17,6 +17,7 @@
     <button onclick="checkDatabase()">检查数据库</button>
     <button onclick="resyncAll()">重新同步所有用户</button>
     <button onclick="scanAllUsers()">🔄 扫描所有用户新 NFT</button>
+    <button onclick="forceRescanAll()" style="background: #f00; color: #fff;">🔥 强制全量重扫（从区块 79785738）</button>
     
     <div id="result"></div>
 
@@ -103,6 +104,46 @@
                     result.innerHTML = html;
                 } else {
                     result.innerHTML = `<p class="error">❌ 扫描失败: ${data.message}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+            }
+        }
+        
+        async function forceRescanAll() {
+            if (!confirm('⚠️ 警告！\n\n这将：\n1. 清空所有用户的 NFT 数据\n2. 从区块 79785738 开始完整重扫\n3. 可能需要 10-30 分钟\n\n确定要继续吗？')) {
+                return;
+            }
+            
+            const result = document.getElementById('result');
+            result.innerHTML = '<p class="warning">🔥 强制全量重扫中，请勿关闭页面...</p><p>预计需要 10-30 分钟，请耐心等待。</p>';
+            
+            try {
+                const res = await fetch('/api/admin/force-rescan-all', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    let html = `<h2 class="success">✅ ${data.message}</h2>`;
+                    html += `<h3>重扫统计</h3>`;
+                    html += `<p>总用户数: ${data.results.total}</p>`;
+                    html += `<p class="success">成功: ${data.results.success}</p>`;
+                    html += `<p>无 NFT: ${data.results.no_nfts}</p>`;
+                    html += `<p class="error">错误: ${data.results.errors}</p>`;
+                    html += `<p class="success">总 NFT 数: ${data.results.total_nfts}</p>`;
+                    html += `<p class="success">总价值: ${data.results.total_value} USDT</p>`;
+                    
+                    if (data.results.details.length > 0) {
+                        html += `<h3>详细结果</h3>`;
+                        html += `<pre>${JSON.stringify(data.results.details, null, 2)}</pre>`;
+                    }
+                    
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = `<p class="error">❌ 重扫失败: ${data.message}</p>`;
                 }
             } catch (error) {
                 result.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
