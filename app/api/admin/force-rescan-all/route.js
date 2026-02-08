@@ -66,6 +66,7 @@ async function forceRescanUser(walletAddress, provider, tiers, latestBlock) {
     // 处理所有 NFT
     const nfts = [];
     const nftsByTier = {};
+    const skippedTokens = [];
     
     for (const log of allLogs) {
       const tokenId = parseInt(log.topics[3], 16);
@@ -94,7 +95,15 @@ async function forceRescanUser(walletAddress, provider, tiers, latestBlock) {
         nftsByTier[tier.tier_name].count++;
         nftsByTier[tier.tier_name].value += tier.price;
         nftsByTier[tier.tier_name].tokens.push(tokenId);
+      } else {
+        // 🔥 记录被跳过的 Token ID
+        skippedTokens.push(tokenId);
+        console.log(`   ⚠️ Token ID ${tokenId} 不在任何等级范围内，已跳过`);
       }
+    }
+    
+    if (skippedTokens.length > 0) {
+      console.log(`   ⚠️ 总共跳过 ${skippedTokens.length} 个 Token: ${skippedTokens.join(', ')}`);
     }
     
     // 🔥 保存所有 NFT 到数据库
