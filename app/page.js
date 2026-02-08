@@ -51,6 +51,7 @@ function HomeContent() {
   });
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [referrerRanking, setReferrerRanking] = useState([]); // 推荐人排行榜
+  const [showAllReferrers, setShowAllReferrers] = useState(false); // 是否显示全部排名
 
   // 🔥 获取推荐人排行榜
   const fetchReferrerRanking = async () => {
@@ -1088,16 +1089,26 @@ function HomeContent() {
               {/* 🔥 推荐人排行榜 */}
               {referrerRanking.length > 0 && (
                 <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200 shadow-lg mt-8">
-                  <div className="flex items-center gap-3 mb-6">
-                    <span className="text-3xl">🏆</span>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-800">推荐人排行榜</h3>
-                      <p className="text-sm text-gray-600">直推业绩排名 · 实时更新</p>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">🏆</span>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-800">推荐人排行榜</h3>
+                        <p className="text-sm text-gray-600">直推业绩排名 · 实时更新</p>
+                      </div>
                     </div>
+                    {referrerRanking.length > 3 && (
+                      <button
+                        onClick={() => setShowAllReferrers(!showAllReferrers)}
+                        className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 rounded-lg font-bold text-sm transition-colors"
+                      >
+                        {showAllReferrers ? '收起' : `查看全部 (${referrerRanking.length})`}
+                      </button>
+                    )}
                   </div>
                   
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                    {referrerRanking.map((referrer, index) => {
+                    {(showAllReferrers ? referrerRanking : referrerRanking.slice(0, 3)).map((referrer, index) => {
                       const isTop3 = index < 3;
                       const medals = ['🥇', '🥈', '🥉'];
                       
