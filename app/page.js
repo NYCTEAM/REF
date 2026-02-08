@@ -1003,11 +1003,14 @@ function HomeContent() {
                                 ) : (
                                   // 🔥 区分旧 NFT 和新购买的 NFT
                                   (member.nft_mint_amount > 0) ? (
-                                    // 有新购买记录 - 显示数量
-                                    <div className="flex flex-col items-end">
+                                    // 有新购买记录 - 显示数量和价值
+                                    <div className="flex flex-col items-end gap-1">
                                       <div className="flex items-center gap-1 text-green-700 bg-green-100 px-2 py-0.5 rounded-full border border-green-200 shadow-sm">
                                         <Coins className="w-3 h-3" />
-                                        <span className="font-bold">持有: {Math.round(member.nft_mint_amount / 10)}</span>
+                                        <span className="font-bold">{member.nft_count || 0} NFT · {member.nft_mint_amount} USDT</span>
+                                      </div>
+                                      <div className="text-[10px] text-purple-600 font-bold">
+                                        佣金: {calculateTieredCommission(member.nft_mint_amount).toFixed(2)} USDT
                                       </div>
                                     </div>
                                   ) : (memberNFTs[member.wallet_address] > 0) ? (
