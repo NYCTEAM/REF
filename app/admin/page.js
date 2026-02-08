@@ -242,6 +242,49 @@ export default function AdminPage() {
     }
   };
 
+  // 🔥 强制全量重扫所有用户（从区块 79785738 开始）
+  const forceRescanAll = async () => {
+    if (!confirm('⚠️ 警告！\n\n这将：\n1. 清空所有用户的 NFT 数据\n2. 从区块 79785738 开始完整重扫\n3. 可能需要 10-30 分钟\n\n确定要继续吗？')) {
+      return;
+    }
+    
+    try {
+      setIsSyncing(true);
+      setSyncProgress({ current: 0, total: 0 });
+      setSyncResults(null);
+      showMessage('开始强制全量重扫...', 'success');
+      
+      const res = await fetch('/api/admin/force-rescan-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setSyncResults({
+          successCount: data.results.success,
+          failCount: data.results.errors,
+          total: data.results.total
+        });
+        showMessage(`强制重扫完成！找到 ${data.results.total_nfts} 个 NFT，总价值 ${data.results.total_value} USDT`, 'success');
+        
+        // 刷新统计数据
+        fetchStats();
+        fetchTeams();
+      } else {
+        showMessage('强制重扫失败: ' + data.message, 'error');
+      }
+      
+    } catch (error) {
+      console.error('强制重扫失败:', error);
+      showMessage('强制重扫失败: ' + error.message, 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const fetchStats = async () => {
     try {
       const res = await fetch('/api/stats');
@@ -623,14 +666,24 @@ export default function AdminPage() {
               </h2>
               <p className="text-sm text-gray-600 mt-1">扫描所有用户的 NFT MINT 事件并保存到数据库</p>
             </div>
-            <button
-              onClick={syncAllNFTs}
-              disabled={isSyncing}
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
-              {isSyncing ? '同步中...' : '开始同步'}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={syncAllNFTs}
+                disabled={isSyncing}
+                className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <RefreshCw className={`w-5 h-5 ${isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? '同步中...' : '增量同步'}
+              </button>
+              <button
+                onClick={forceRescanAll}
+                disabled={isSyncing}
+                className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <AlertCircle className="w-5 h-5" />
+                强制全量重扫
+              </button>
+            </div>
           </div>
 
           {isSyncing && (
