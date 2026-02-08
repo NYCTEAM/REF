@@ -16,6 +16,7 @@
     
     <button onclick="checkDatabase()">检查数据库</button>
     <button onclick="resyncAll()">重新同步所有用户</button>
+    <button onclick="scanAllUsers()">🔄 扫描所有用户新 NFT</button>
     
     <div id="result"></div>
 
@@ -66,6 +67,42 @@
                     result.innerHTML = html;
                 } else {
                     result.innerHTML = `<p class="error">❌ 同步失败: ${data.message}</p>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
+            }
+        }
+        
+        async function scanAllUsers() {
+            if (!confirm('确定要扫描所有用户的新 NFT 吗？这可能需要几分钟。')) {
+                return;
+            }
+            
+            const result = document.getElementById('result');
+            result.innerHTML = '<p>⏳ 扫描中，请稍候...</p>';
+            
+            try {
+                const res = await fetch('/api/admin/scan-all-users', { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    let html = `<h2 class="success">✅ ${data.message}</h2>`;
+                    html += `<h3>扫描统计</h3>`;
+                    html += `<p>总用户数: ${data.results.total}</p>`;
+                    html += `<p>已扫描: ${data.results.scanned}</p>`;
+                    html += `<p>已跳过: ${data.results.skipped}</p>`;
+                    html += `<p>已更新: ${data.results.updated}</p>`;
+                    html += `<p>错误数: ${data.results.errors}</p>`;
+                    html += `<p class="success">新增 NFT 总数: ${data.results.newNFTsTotal}</p>`;
+                    
+                    if (data.results.details.length > 0) {
+                        html += `<h3>更新详情</h3>`;
+                        html += `<pre>${JSON.stringify(data.results.details, null, 2)}</pre>`;
+                    }
+                    
+                    result.innerHTML = html;
+                } else {
+                    result.innerHTML = `<p class="error">❌ 扫描失败: ${data.message}</p>`;
                 }
             } catch (error) {
                 result.innerHTML = `<p class="error">❌ 错误: ${error.message}</p>`;
