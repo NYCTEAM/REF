@@ -60,6 +60,16 @@ function HomeContent() {
       const data = await res.json();
       if (data.success) {
         setReferrerRanking(data.data || []);
+        
+        // 🔥 如果当前用户不在前3名，自动展开显示
+        if (walletAddress && data.data) {
+          const userIndex = data.data.findIndex(
+            r => r.wallet_address.toLowerCase() === walletAddress.toLowerCase()
+          );
+          if (userIndex > 2) {
+            setShowAllReferrers(true);
+          }
+        }
       }
     } catch (error) {
       console.error('获取推荐人排行榜失败:', error);
@@ -1111,14 +1121,17 @@ function HomeContent() {
                     {(showAllReferrers ? referrerRanking : referrerRanking.slice(0, 3)).map((referrer, index) => {
                       const isTop3 = index < 3;
                       const medals = ['🥇', '🥈', '🥉'];
+                      const isCurrentUser = referrer.wallet_address.toLowerCase() === walletAddress?.toLowerCase();
                       
                       return (
                         <div 
                           key={referrer.wallet_address}
                           className={`flex items-center gap-4 p-4 rounded-lg transition-all ${
-                            isTop3 
-                              ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-md' 
-                              : 'bg-white border border-gray-200 hover:border-yellow-300'
+                            isCurrentUser
+                              ? 'bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-400 shadow-lg ring-2 ring-blue-300'
+                              : isTop3 
+                                ? 'bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 shadow-md' 
+                                : 'bg-white border border-gray-200 hover:border-yellow-300'
                           }`}
                         >
                           <div className="flex-shrink-0 w-12 text-center">
@@ -1139,9 +1152,14 @@ function HomeContent() {
                                   TOP {index + 1}
                                 </span>
                               )}
+                              {isCurrentUser && (
+                                <span className="px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full">
+                                  您的排名
+                                </span>
+                              )}
                             </div>
                             <code className="text-xs text-gray-500 font-mono">
-                              {referrer.wallet_address.substring(0, 10)}...{referrer.wallet_address.substring(38)}
+                              {referrer.wallet_address.substring(0, 6)}...{referrer.wallet_address.substring(36)}
                             </code>
                           </div>
                           
